@@ -1,0 +1,28 @@
+name: Otomatisasi KPI Pipeline
+
+on:
+  schedule:
+    # Menggunakan format Cron: Berjalan setiap hari jam 17:00 WIB (10:00 UTC)
+    - cron: '0 10 * * *'
+  workflow_dispatch: # Membuat tombol manual di GitHub untuk tes jalan kapan saja
+
+jobs:
+  jalankan-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Ambil Kode dari Repositori
+      uses: actions/checkout@v4
+
+    - name: Siapkan Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Instalasi Library Pendukung
+      run: |
+        python -m pip install --upgrade pip
+        pip install pandas yfinance sqlalchemy psycopg2-binary
+
+    - name: Eksekusi Skrip Pipeline Data
+      run: python src/pipeline.py
