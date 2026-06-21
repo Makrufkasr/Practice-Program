@@ -2,8 +2,8 @@ name: Otomatisasi KPI Pipeline
 
 on:
   schedule:
-    # Menggunakan format Cron: Berjalan setiap hari jam 17:00 WIB (10:00 UTC)
-    - cron: '0 10 * * *'
+    # Menggunakan format Cron: Berjalan setiap hari jam 17:25 WIB (10:25 UTC)
+    - cron: '25 10 * * *'
   workflow_dispatch: # Membuat tombol manual di GitHub untuk tes jalan kapan saja
 
 jobs:

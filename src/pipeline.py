@@ -14,6 +14,7 @@ def ambil_data_live(simbol, nama_aset):
     df_bersih.columns = ['tanggal', 'harga_buka', 'harga_tertinggi', 'harga_tutup']
     df_bersih['nama_aset'] = nama_aset
     df_bersih['tanggal'] = pd.to_datetime(df_bersih['tanggal']).dt.date
+    df_bersih['updated_at'] = pd.Timestamp.now(tz='Asia/Jakarta')
     
     return df_bersih
 
