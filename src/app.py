@@ -2,8 +2,225 @@ import streamlit as st
 import requests
 import pandas as pd
 from sqlalchemy import create_engine, text
+try:
+    from src.auth import init_db_auth, autentikasi_pengguna, tambah_pengguna, ganti_password, ambil_semua_pengguna, ubah_role_pengguna, hapus_pengguna
+except ModuleNotFoundError:
+    from auth import init_db_auth, autentikasi_pengguna, tambah_pengguna, ganti_password, ambil_semua_pengguna, ubah_role_pengguna, hapus_pengguna
+
+# Inisialisasi DB auth saat pertama kali dijalankan (jika diperlukan)
+init_db_auth()
 
 st.set_page_config(page_title="Dashboard KPI Finansial", layout="wide")
+
+# Setup session state untuk status login dan halaman aktif
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+if "username" not in st.session_state:
+    st.session_state.username = ""
+if "nama_lengkap" not in st.session_state:
+    st.session_state.nama_lengkap = ""
+if "role" not in st.session_state:
+    st.session_state.role = ""
+if "page" not in st.session_state:
+    st.session_state.page = "login"
+
+# Halaman Login / Registrasi jika belum login
+if not st.session_state.authenticated:
+    st.markdown("""
+        <style>
+        .login-container {
+            max-width: 450px;
+            margin: 60px auto;
+            padding: 30px;
+            border-radius: 15px;
+            background-color: #1E1E2F;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #FFFFFF;
+        }
+        .login-title {
+            text-align: center;
+            font-family: 'Outfit', 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            background: linear-gradient(45deg, #FF8a00, #E52e71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .login-footer {
+            text-align: center;
+            font-size: 12px;
+            color: #888888;
+            margin-top: 20px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.session_state.page == "login":
+            st.markdown('<div class="login-container">', unsafe_allow_html=True)
+            st.markdown('<div class="login-title">🔐 KPI Dashboard</div>', unsafe_allow_html=True)
+            
+            with st.form("login_form", clear_on_submit=False):
+                username_input = st.text_input("Username", placeholder="Masukkan username Anda...", key="login_user")
+                password_input = st.text_input("Password", type="password", placeholder="Masukkan password Anda...", key="login_pass")
+                submit_button = st.form_submit_button("Masuk", use_container_width=True)
+                
+                if submit_button:
+                    if not username_input or not password_input:
+                        st.error("⚠️ Username dan password tidak boleh kosong.")
+                    else:
+                        auth_result = autentikasi_pengguna(username_input, password_input)
+                        if auth_result.get("authenticated"):
+                            st.session_state.authenticated = True
+                            st.session_state.username = auth_result["username"]
+                            st.session_state.nama_lengkap = auth_result["nama_lengkap"]
+                            st.session_state.role = auth_result["role"]
+                            st.success("🎉 Login Berhasil! Memuat data...")
+                            st.rerun()
+                        else:
+                            st.error("❌ Username atau password salah.")
+            
+            # Action di bawah password/login button untuk pindah ke page daftar
+            st.write("")
+            if st.button("Belum punya akun? Daftar di sini", use_container_width=True):
+                st.session_state.page = "register"
+                st.rerun()
+                
+            st.markdown('<div class="login-footer">Dilindungi oleh Lapisan Keamanan Database</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+        elif st.session_state.page == "register":
+            st.markdown('<div class="login-container">', unsafe_allow_html=True)
+            st.markdown('<div class="login-title">📝 Daftar Akun Baru</div>', unsafe_allow_html=True)
+            
+            with st.form("register_form", clear_on_submit=True):
+                reg_username = st.text_input("Username Baru:", placeholder="Pilih username...", key="reg_user")
+                reg_nama = st.text_input("Nama Lengkap:", placeholder="Masukkan nama lengkap...", key="reg_name")
+                reg_pwd = st.text_input("Password Baru:", type="password", placeholder="Masukkan password...", key="reg_pass")
+                reg_pwd_confirm = st.text_input("Konfirmasi Password Baru:", type="password", placeholder="Ketik ulang password...", key="reg_pass_confirm")
+                submit_reg = st.form_submit_button("Daftarkan Akun Baru", use_container_width=True)
+                
+                if submit_reg:
+                    if not reg_username or not reg_nama or not reg_pwd:
+                        st.error("⚠️ Semua field harus diisi!")
+                    elif reg_pwd != reg_pwd_confirm:
+                        st.error("⚠️ Konfirmasi password tidak cocok.")
+                    else:
+                        hasil = tambah_pengguna(reg_username, reg_pwd, reg_nama, role="user")
+                        if hasil["status"] == "sukses":
+                            st.success(f"🎉 {hasil['pesan']}!")
+                            st.info("Silakan klik 'Kembali ke Login' di bawah untuk masuk.")
+                        else:
+                            st.error(f"❌ {hasil['pesan']}")
+            
+            # Button untuk kembali ke login page
+            st.write("")
+            if st.button("Sudah punya akun? Kembali ke Login", use_container_width=True):
+                st.session_state.page = "login"
+                st.rerun()
+                
+            st.markdown('<div class="login-footer">Dilindungi oleh Lapisan Keamanan Database</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+    st.stop()
+
+# --- SIDEBAR UNTUK PROFIL & LOGOUT ---
+st.sidebar.image("https://img.icons8.com/color/96/dashboard.png", width=80)
+st.sidebar.markdown("### 📊 Menu Navigasi")
+st.sidebar.markdown(f"Selamat Datang,\n**{st.session_state.nama_lengkap}**")
+st.sidebar.caption(f"Role: {st.session_state.role.upper()} | User: {st.session_state.username}")
+
+# Ganti Password
+with st.sidebar.expander("🔑 Ganti Password"):
+    with st.form("form_ganti_password", clear_on_submit=True):
+        pwd_baru = st.text_input("Password Baru:", type="password", key="pwd_baru")
+        pwd_konfirmasi = st.text_input("Konfirmasi Password Baru:", type="password", key="pwd_konfirmasi")
+        tombol_ganti = st.form_submit_button("Simpan Password", use_container_width=True)
+        if tombol_ganti:
+            if not pwd_baru:
+                st.error("⚠️ Password baru tidak boleh kosong.")
+            elif pwd_baru != pwd_konfirmasi:
+                st.error("⚠️ Konfirmasi password tidak cocok.")
+            else:
+                hasil = ganti_password(st.session_state.username, pwd_baru)
+                if hasil["status"] == "sukses":
+                    st.success("🎉 Password berhasil diubah!")
+                else:
+                    st.error(f"❌ {hasil['pesan']}")
+
+# Panel Admin (hanya tampil jika role = admin)
+if st.session_state.role == "admin":
+    with st.sidebar.expander("⚙️ Panel Admin"):
+        list_users = ambil_semua_pengguna()
+        if list_users:
+            df_users_sidebar = pd.DataFrame(list_users)
+            df_users_sidebar = df_users_sidebar.rename(columns={
+                "username": "Username",
+                "nama_lengkap": "Nama Lengkap",
+                "role": "Role"
+            })
+            st.dataframe(df_users_sidebar[["Username", "Nama Lengkap", "Role"]], use_container_width=True)
+
+            st.markdown("**Ubah Peran Pengguna**")
+            with st.form("form_ubah_role_sidebar", clear_on_submit=False):
+                target_user_role_sb = st.selectbox("Pilih Pengguna:", options=[u["username"] for u in list_users if u["username"] != "admin"], key="target_user_role_sb")
+                new_role_sb = st.selectbox("Peran Baru:", options=["user", "admin"], key="new_role_sb")
+                submit_role_sb = st.form_submit_button("Simpan Peran", use_container_width=True)
+                if submit_role_sb:
+                    res = ubah_role_pengguna(target_user_role_sb, new_role_sb)
+                    if res["status"] == "sukses":
+                        st.success(res["pesan"])
+                        st.rerun()
+                    else:
+                        st.error(res["pesan"])
+
+            st.markdown("**Reset Password Pengguna**")
+            with st.form("form_reset_pwd_sidebar", clear_on_submit=True):
+                target_user_pwd_sb = st.selectbox("Pilih Pengguna:", options=[u["username"] for u in list_users], key="target_user_pwd_sb")
+                reset_pwd_sb = st.text_input("Password Baru:", type="password", key="reset_pwd_sb")
+                submit_reset_sb = st.form_submit_button("Reset Password", use_container_width=True)
+                if submit_reset_sb:
+                    if not reset_pwd_sb:
+                        st.error("Password tidak boleh kosong.")
+                    else:
+                        res = ganti_password(target_user_pwd_sb, reset_pwd_sb)
+                        if res["status"] == "sukses":
+                            st.success(f"🎉 Password '{target_user_pwd_sb}' berhasil direset!")
+                        else:
+                            st.error(res["pesan"])
+
+            st.markdown("**🗑️ Hapus Pengguna**")
+            with st.form("form_hapus_user_sidebar", clear_on_submit=False):
+                non_admin_users = [u["username"] for u in list_users if u["username"] != "admin"]
+                if non_admin_users:
+                    target_user_del_sb = st.selectbox("Pilih Pengguna:", options=non_admin_users, key="target_user_del_sb")
+                    submit_del_sb = st.form_submit_button("Hapus Pengguna", use_container_width=True, type="primary")
+                    if submit_del_sb:
+                        res = hapus_pengguna(target_user_del_sb)
+                        if res["status"] == "sukses":
+                            st.success(res["pesan"])
+                            st.rerun()
+                        else:
+                            st.error(res["pesan"])
+                else:
+                    st.info("Tidak ada pengguna lain untuk dihapus.")
+        else:
+            st.info("Tidak ada pengguna terdaftar.")
+
+
+st.sidebar.markdown("---")
+
+if st.sidebar.button("🚪 Keluar / Logout", use_container_width=True, type="primary"):
+    st.session_state.authenticated = False
+    st.session_state.username = ""
+    st.session_state.nama_lengkap = ""
+    st.session_state.role = ""
+    st.rerun()
+
+st.sidebar.markdown("---")
 
 st.title("📊 Dashboard KPI Live: Emas & Saham")
 st.write("Mengonsumsi data secara langsung dari Supabase atau Backend API FastAPI")
@@ -31,11 +248,11 @@ def ambil_data():
         except Exception as api_err:
             raise Exception(f"Database error: {db_err} | API error: {api_err}")
 
-def ambil_data_portofolio():
+def ambil_data_portofolio(username):
     try:
         engine = create_engine(ALAMAT_DATABASE)
-        query = "SELECT * FROM portofolio ORDER BY tanggal_beli DESC;"
-        df_port = pd.read_sql(query, con=engine)
+        query = text("SELECT * FROM portofolio WHERE username = :username ORDER BY tanggal_beli DESC;")
+        df_port = pd.read_sql(query, con=engine, params={"username": username})
         return df_port
     except Exception as e:
         st.error(f"Gagal mengambil data portofolio: {e}")
@@ -152,7 +369,7 @@ try:
             st.subheader("💼 Portofolio Investasi")
             
             # Ambil data portofolio dari DB
-            df_port = ambil_data_portofolio()
+            df_port = ambil_data_portofolio(st.session_state.username)
             
             # Hitung harga terkini setiap aset
             df_terbaru = df.sort_values("tanggal", ascending=False).groupby("nama_aset").first().reset_index()
@@ -185,14 +402,15 @@ try:
                         with engine.connect() as conn:
                             conn.execute(
                                 text("""
-                                    INSERT INTO portofolio (nama_aset, jumlah, harga_beli, tanggal_beli) 
-                                    VALUES (:nama, :jumlah, :harga, :tanggal)
+                                    INSERT INTO portofolio (nama_aset, jumlah, harga_beli, tanggal_beli, username) 
+                                    VALUES (:nama, :jumlah, :harga, :tanggal, :username)
                                 """),
                                 {
                                     "nama": form_nama_aset,
                                     "jumlah": jumlah_simpan,
                                     "harga": input_harga,
-                                    "tanggal": input_tanggal
+                                    "tanggal": input_tanggal,
+                                    "username": st.session_state.username
                                 }
                             )
                             conn.commit()
@@ -251,13 +469,14 @@ try:
                                             text("""
                                                 UPDATE portofolio 
                                                 SET jumlah = :jumlah, harga_beli = :harga, tanggal_beli = :tanggal, updated_at = CURRENT_TIMESTAMP
-                                                WHERE id = :id
+                                                WHERE id = :id AND username = :username
                                             """),
                                             {
                                                 "jumlah": jumlah_simpan_edit,
                                                 "harga": new_harga,
                                                 "tanggal": new_tanggal,
-                                                "id": tx_id_pilihan
+                                                "id": tx_id_pilihan,
+                                                "username": st.session_state.username
                                             }
                                         )
                                         conn.commit()
@@ -274,8 +493,8 @@ try:
                                     engine = create_engine(ALAMAT_DATABASE)
                                     with engine.connect() as conn:
                                         conn.execute(
-                                            text("DELETE FROM portofolio WHERE id = :id"),
-                                            {"id": tx_id_pilihan}
+                                            text("DELETE FROM portofolio WHERE id = :id AND username = :username"),
+                                            {"id": tx_id_pilihan, "username": st.session_state.username}
                                         )
                                         conn.commit()
                                     st.warning("Transaksi berhasil dihapus!")
@@ -421,6 +640,8 @@ try:
                         }),
                         use_container_width=True
                     )
+        
+
 
 except Exception as e:
     st.error(f"❌ Gagal memuat data dari semua jalur. Detail: {e}")
