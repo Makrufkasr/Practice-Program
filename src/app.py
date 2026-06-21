@@ -234,7 +234,7 @@ def ambil_data():
     try:
         # Pilihan Utama: Langsung tembak ke Supabase
         engine = create_engine(ALAMAT_DATABASE)
-        query = "SELECT * FROM kpi_data ORDER BY tanggal DESC;"
+        query = 'SELECT * FROM "APP_ASSET_TRACKER".kpi_data ORDER BY tanggal DESC;'
         df = pd.read_sql(query, con=engine)
         return df
     except Exception as db_err:
@@ -252,7 +252,7 @@ def ambil_data():
 def ambil_data_portofolio(username):
     try:
         engine = create_engine(ALAMAT_DATABASE)
-        query = text("SELECT * FROM portofolio WHERE username = :username ORDER BY tanggal_beli DESC;")
+        query = text('SELECT * FROM "APP_ASSET_TRACKER".portofolio WHERE username = :username ORDER BY tanggal_beli DESC;')
         df_port = pd.read_sql(query, con=engine, params={"username": username})
         return df_port
     except Exception as e:
@@ -456,7 +456,7 @@ try:
                                 engine = create_engine(ALAMAT_DATABASE)
                                 with engine.connect() as conn:
                                     conn.execute(text("""
-                                        INSERT INTO tabungan (username, nama_bank, saldo, tanggal, catatan)
+                                        INSERT INTO "APP_ASSET_TRACKER".tabungan (username, nama_bank, saldo, tanggal, catatan)
                                         VALUES (:u, :bank, :saldo, :tgl, :cat)
                                     """), {"u": st.session_state.username, "bank": tb_bank.strip(), "saldo": tb_saldo, "tgl": tb_tanggal, "cat": tb_catatan.strip() or None})
                                     conn.commit()
@@ -527,7 +527,7 @@ try:
                             with engine.connect() as conn:
                                 conn.execute(
                                     text("""
-                                        INSERT INTO portofolio (nama_aset, jumlah, harga_beli, tanggal_beli, username)
+                                        INSERT INTO "APP_ASSET_TRACKER".portofolio (nama_aset, jumlah, harga_beli, tanggal_beli, username)
                                         VALUES (:nama, :jumlah, :harga, :tanggal, :username)
                                     """),
                                     {
@@ -594,7 +594,7 @@ try:
                                     with engine.connect() as conn:
                                         conn.execute(
                                             text("""
-                                                UPDATE portofolio 
+                                                UPDATE "APP_ASSET_TRACKER".portofolio 
                                                 SET jumlah = :jumlah, harga_beli = :harga, tanggal_beli = :tanggal, updated_at = CURRENT_TIMESTAMP
                                                 WHERE id = :id AND username = :username
                                             """),
@@ -620,7 +620,7 @@ try:
                                     engine = create_engine(ALAMAT_DATABASE)
                                     with engine.connect() as conn:
                                         conn.execute(
-                                            text("DELETE FROM portofolio WHERE id = :id AND username = :username"),
+                                            text('DELETE FROM "APP_ASSET_TRACKER".portofolio WHERE id = :id AND username = :username'),
                                             {"id": tx_id_pilihan, "username": st.session_state.username}
                                         )
                                         conn.commit()
@@ -639,7 +639,7 @@ try:
                     eng_tb = create_engine(ALAMAT_DATABASE)
                     with eng_tb.connect() as c_tb:
                         rows_tb = c_tb.execute(text(
-                            "SELECT nama_bank, saldo, tanggal FROM tabungan WHERE username = :u ORDER BY tanggal DESC"
+                            'SELECT nama_bank, saldo, tanggal FROM "APP_ASSET_TRACKER".tabungan WHERE username = :u ORDER BY tanggal DESC'
                         ), {"u": st.session_state.username}).fetchall()
                     df_tabungan = pd.DataFrame(rows_tb, columns=["nama_bank", "saldo", "tanggal"]) if rows_tb else pd.DataFrame(columns=["nama_bank", "saldo", "tanggal"])
                 except:

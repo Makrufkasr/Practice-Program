@@ -14,7 +14,7 @@ def halaman_utama():
 
 @app.get("/api/data")
 def ambil_data_kpi():
-    query = "SELECT * FROM kpi_data ORDER BY tanggal DESC;"
+    query = 'SELECT * FROM "APP_ASSET_TRACKER".kpi_data ORDER BY tanggal DESC;'
     df = pd.read_sql(query, con=engine)
     
     df['tanggal'] = df['tanggal'].astype(str)
@@ -28,13 +28,13 @@ def ambil_data_kpi():
 def ambil_portofolio():
     try:
         # 1. Ambil data portofolio
-        df_port = pd.read_sql("SELECT * FROM portofolio ORDER BY tanggal_beli DESC;", con=engine)
+        df_port = pd.read_sql('SELECT * FROM "APP_ASSET_TRACKER".portofolio ORDER BY tanggal_beli DESC;', con=engine)
         
         if df_port.empty:
             return {"status": "sukses", "total_investasi": 0.0, "nilai_sekarang": 0.0, "profit_loss": 0.0, "data": []}
             
         # 2. Ambil data harga terbaru
-        df_pasar = pd.read_sql("SELECT * FROM kpi_data ORDER BY tanggal DESC;", con=engine)
+        df_pasar = pd.read_sql('SELECT * FROM "APP_ASSET_TRACKER".kpi_data ORDER BY tanggal DESC;', con=engine)
         df_terbaru = df_pasar.sort_values("tanggal", ascending=False).groupby("nama_aset").first().reset_index()
         
         # 3. Hitung kalkulasi portofolio

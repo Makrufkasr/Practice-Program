@@ -28,7 +28,7 @@ def verify_password(stored_password: str, provided_password: str) -> bool:
 def init_db_auth():
     """Membuat tabel pengguna jika belum ada dan menyisipkan akun admin default jika kosong."""
     create_table_query = """
-    CREATE TABLE IF NOT EXISTS pengguna (
+    CREATE TABLE IF NOT EXISTS "APP_ASSET_TRACKER".pengguna (
         id SERIAL PRIMARY KEY,
         username VARCHAR(50) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
@@ -42,13 +42,13 @@ def init_db_auth():
         
         # Tambah kolom username ke tabel portofolio jika belum ada untuk isolasi user
         alter_portofolio_query = """
-        ALTER TABLE portofolio ADD COLUMN IF NOT EXISTS username VARCHAR(50) DEFAULT 'admin';
+        ALTER TABLE "APP_ASSET_TRACKER".portofolio ADD COLUMN IF NOT EXISTS username VARCHAR(50) DEFAULT 'admin';
         """
         conn.execute(text(alter_portofolio_query))
         conn.commit()
         
         # Cek apakah ada pengguna di database
-        check_query = "SELECT COUNT(*) FROM pengguna;"
+        check_query = 'SELECT COUNT(*) FROM "APP_ASSET_TRACKER".pengguna;'
         result = conn.execute(text(check_query)).scalar()
         
         if result == 0:
@@ -58,7 +58,7 @@ def init_db_auth():
             hash_pwd = hash_password(default_password)
             
             insert_query = """
-            INSERT INTO pengguna (username, password_hash, nama_lengkap, role)
+            INSERT INTO "APP_ASSET_TRACKER".pengguna (username, password_hash, nama_lengkap, role)
             VALUES (:username, :password_hash, :nama_lengkap, :role);
             """
             conn.execute(
@@ -77,7 +77,7 @@ def init_db_auth():
 
 def autentikasi_pengguna(username, password):
     """Mengecek kredensial pengguna dari database."""
-    query = "SELECT password_hash, nama_lengkap, role FROM pengguna WHERE username = :username;"
+    query = 'SELECT password_hash, nama_lengkap, role FROM "APP_ASSET_TRACKER".pengguna WHERE username = :username;'
     with engine.connect() as conn:
         result = conn.execute(text(query), {"username": username}).fetchone()
         if result:
@@ -94,9 +94,9 @@ def autentikasi_pengguna(username, password):
 def tambah_pengguna(username, password, nama_lengkap, role="user"):
     """Menambahkan pengguna baru ke database."""
     # Cek apakah username sudah ada
-    check_query = "SELECT COUNT(*) FROM pengguna WHERE username = :username;"
+    check_query = 'SELECT COUNT(*) FROM "APP_ASSET_TRACKER".pengguna WHERE username = :username;'
     insert_query = """
-    INSERT INTO pengguna (username, password_hash, nama_lengkap, role)
+    INSERT INTO "APP_ASSET_TRACKER".pengguna (username, password_hash, nama_lengkap, role)
     VALUES (:username, :password_hash, :nama_lengkap, :role);
     """
     try:
@@ -123,7 +123,7 @@ def tambah_pengguna(username, password, nama_lengkap, role="user"):
 def ganti_password(username, password_baru):
     """Mengubah password pengguna di database."""
     update_query = """
-    UPDATE pengguna 
+    UPDATE "APP_ASSET_TRACKER".pengguna 
     SET password_hash = :password_hash 
     WHERE username = :username;
     """
@@ -144,7 +144,7 @@ def ganti_password(username, password_baru):
 
 def ambil_semua_pengguna():
     """Mengambil semua daftar pengguna dari database."""
-    query = "SELECT username, nama_lengkap, role, created_at FROM pengguna ORDER BY created_at DESC;"
+    query = 'SELECT username, nama_lengkap, role, created_at FROM "APP_ASSET_TRACKER".pengguna ORDER BY created_at DESC;'
     try:
         with engine.connect() as conn:
             result = conn.execute(text(query)).fetchall()
@@ -155,7 +155,7 @@ def ambil_semua_pengguna():
 
 def ubah_role_pengguna(username, role_baru):
     """Mengubah role pengguna di database."""
-    query = "UPDATE pengguna SET role = :role WHERE username = :username;"
+    query = 'UPDATE "APP_ASSET_TRACKER".pengguna SET role = :role WHERE username = :username;'
     try:
         with engine.connect() as conn:
             conn.execute(text(query), {"role": role_baru, "username": username})
@@ -169,7 +169,7 @@ def hapus_pengguna(username):
     if username == "admin":
         return {"status": "gagal", "pesan": "Akun admin utama tidak dapat dihapus."}
         
-    query = "DELETE FROM pengguna WHERE username = :username;"
+    query = 'DELETE FROM "APP_ASSET_TRACKER".pengguna WHERE username = :username;'
     try:
         with engine.connect() as conn:
             conn.execute(text(query), {"username": username})

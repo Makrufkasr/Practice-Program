@@ -61,13 +61,13 @@ def jalankan_pipeline():
         with engine.connect() as conn:
             for nama in tabel_kombinasi['nama_aset'].unique():
                 conn.execute(
-                    text("DELETE FROM kpi_data WHERE nama_aset = :nama"),
+                    text('DELETE FROM "APP_ASSET_TRACKER".kpi_data WHERE nama_aset = :nama'),
                     {"nama": nama}
                 )
             conn.commit()
             
         # 2. Unggah data 1 tahun terbaru yang bersih
-        tabel_kombinasi.to_sql('kpi_data', con=engine, if_exists='append', index=False)
+        tabel_kombinasi.to_sql('kpi_data', con=engine, if_exists='append', index=False, schema='APP_ASSET_TRACKER')
         
         print("Sukses! Data 1 tahun berhasil diunggah ke Supabase.")
 
