@@ -10,7 +10,7 @@ engine = create_engine(ALAMAT_DATABASE)
 
 @app.get("/")
 def halaman_utama():
-    return {"status": "Backend API Berjalan Sukses", "proyek": "Automated KPI Dashboard"}
+    return {"status": "Backend API Berjalan Sukses", "proyek": "Asset Tracker"}
 
 @app.get("/api/data")
 def ambil_data_kpi():
