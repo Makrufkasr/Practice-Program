@@ -69,7 +69,7 @@ def jalankan_pipeline():
         # 2. Unggah data 1 tahun terbaru yang bersih
         tabel_kombinasi.to_sql('kpi_data', con=engine, if_exists='append', index=False, schema='APP_ASSET_TRACKER')
         
-        print("Sukses! Data 1 tahun berhasil diunggah ke Supabase.")
+        print("Sukses! Data lama dibersihkan dan data 1 tahun terbaru berhasil diunggah ke Supabase.")
 
 if __name__ == "__main__":
     jalankan_pipeline()

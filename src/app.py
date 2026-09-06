@@ -229,7 +229,7 @@ st.write("Mengonsumsi data secara langsung dari Supabase atau Backend API FastAP
 # Tautan koneksi database Anda
 ALAMAT_DATABASE = "postgresql://postgres.zaqxdmhofnbmusemwaxl:Makrufkausar26@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres"
 
-@st.cache_data(ttl=3600)  # Menghemat kuota, data disimpan di memori selama 1 jam
+@st.cache_data(ttl=300)  # Menghemat kuota, data disimpan di memori selama 5 menit
 def ambil_data():
     try:
         # Pilihan Utama: Langsung tembak ke Supabase
@@ -258,6 +258,16 @@ def ambil_data_portofolio(username):
     except Exception as e:
         st.error(f"Gagal mengambil data portofolio: {e}")
         return pd.DataFrame()
+
+def ambil_data_tabungan(username):
+    try:
+        engine = create_engine(ALAMAT_DATABASE)
+        query = text('SELECT id, nama_bank, saldo, tanggal, catatan FROM "APP_ASSET_TRACKER".tabungan WHERE username = :username ORDER BY tanggal DESC, id DESC;')
+        df_tb = pd.read_sql(query, con=engine, params={"username": username})
+        return df_tb
+    except Exception as e:
+        st.error(f"Gagal mengambil data tabungan: {e}")
+        return pd.DataFrame(columns=["id", "nama_bank", "saldo", "tanggal", "catatan"])
 
 def hitung_tren_portofolio_aset(df_historis_aset, df_transaksi_aset):
     df_trend = df_historis_aset.sort_values("tanggal").copy()
@@ -330,6 +340,82 @@ def hitung_tren_total_portofolio(df_pasar, df_port):
     return df_trend_total
 
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+
+def dapatkan_analisis_ai_advisor(summary_port: dict, df_grouped: pd.DataFrame, total_tabungan: float, df_pasar: pd.DataFrame) -> dict:
+    """
+    Menggunakan Gemini AI dengan persona Senior Investment Advisor untuk menganalisis portofolio pengguna 'admin'
+    dan memberikan nasihat beli (buy advice) serta alokasi yang optimal.
+    """
+    try:
+        from google import genai
+        from google.genai import types
+        
+        api_key = GEMINI_API_KEY or os.getenv("GEMINI_API_KEY", "")
+        if not api_key:
+            return {
+                "status": "error",
+                "pesan": "GEMINI_API_KEY belum dikonfigurasi pada file .env."
+            }
+            
+        client = genai.Client(api_key=api_key)
+        
+        # Susun rincian teks portofolio
+        rincian_aset = []
+        for _, r in df_grouped.iterrows():
+            nama = "Emas" if r["nama_aset"] == "Emas (IDR/gram)" else r["nama_aset"]
+            rincian_aset.append(f"- {nama}: Modal Rp {r['total_investasi']:,.0f}, Nilai Sekarang Rp {r['nilai_sekarang']:,.0f}, Profit/Loss: {r['profit_loss_persen']:+.2f}%")
+        
+        text_rincian = "\n".join(rincian_aset) if rincian_aset else "Portofolio investasi belum berisi aset."
+        
+        # Ringkasan pasar terbaru
+        df_terbaru = df_pasar.sort_values("tanggal", ascending=False).groupby("nama_aset").first().reset_index()
+        info_pasar = "\n".join([f"- {row['nama_aset']}: Rp {row['harga_tutup']:,.0f}" for _, row in df_terbaru.iterrows()])
+        
+        prompt = f"""
+Anda adalah seorang **Senior Investment Advisor & Wealth Manager** terkemuka.
+Analisis portofolio pengguna bernama **'{summary_port.get('username', 'admin')}'** berikut:
+
+### Metadata & Kinerja Portofolio Pengguna:
+- Total Modal Terinvestasi: Rp {summary_port.get('total_modal', 0):,.0f}
+- Nilai Portofolio Saat Ini: Rp {summary_port.get('nilai_sekarang', 0):,.0f}
+- Total Profit/Loss: Rp {summary_port.get('profit_loss', 0):,.0f} ({summary_port.get('profit_loss_pct', 0):+.2f}%)
+- Total Saldo Tabungan Cash: Rp {total_tabungan:,.0f}
+
+### Rincian Aset Terdaftar:
+{text_rincian}
+
+### Harga Pasar Terakhir:
+{info_pasar}
+
+---
+### Tugas Anda:
+1. Berikan **Health Score Portofolio** (skor 1-100) dan evaluasi diversifikasi asetnya saat ini.
+2. Berikan **3 Rekomendasi Beli (Buy Advice)** yang konkrit & spesifik (misal: kapan beli Emas saat koreksi, atau saham spesifik yang bagus diakumulasi) untuk membuat asetnya optimal. Sertakan:
+   - Nama Aset yang disarankan dibeli
+   - Alasan strategis (Teknikal/Fundamental)
+   - Target Harga Beli (Buy Area) & Alokasi Modal disarankan (%)
+3. Berikan **Strategi Rebalancing** ringkas agar portofolio tetap tangguh menghadapi inflasi & gejolak pasar.
+
+Format respon dengan Markdown yang rapi, profesional, dan menggunakan visualisasi emoji yang menarik.
+"""
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.4,
+                max_output_tokens=700
+            )
+        )
+        return {"status": "sukses", "analisis": response.text}
+    except Exception as e:
+        return {"status": "error", "pesan": f"Gagal mendapatkan saran AI: {str(e)}"}
+
+
 try:
     df = ambil_data()
     if df.empty:
@@ -337,7 +423,11 @@ try:
     else:
         df["tanggal"] = pd.to_datetime(df["tanggal"])
         
-        tab_pasar, tab_portofolio = st.tabs(["📈 Tren Pasar Aset", "💼 Portofolio & Monitoring Saya"])
+        tab_pasar, tab_portofolio, tab_ai_advisor = st.tabs([
+            "📈 Tren Pasar Aset", 
+            "💼 Portofolio & Monitoring Saya", 
+            "🤖 AI Advisor & Performance Optimalization"
+        ])
         
         with tab_pasar:
             if "updated_at" in df.columns and not df["updated_at"].isnull().all():
@@ -412,8 +502,10 @@ try:
         with tab_portofolio:
             st.subheader("💼 Portofolio Investasi")
             
-            # Ambil data portofolio dari DB
+            # Ambil data portofolio & tabungan dari DB
             df_port = ambil_data_portofolio(st.session_state.username)
+            df_tabungan = ambil_data_tabungan(st.session_state.username)
+            total_tabungan = float(df_tabungan["saldo"].sum()) if not df_tabungan.empty else 0.0
             
             # Hitung harga terkini setiap aset
             df_terbaru = df.sort_values("tanggal", ascending=False).groupby("nama_aset").first().reset_index()
@@ -461,6 +553,7 @@ try:
                                     """), {"u": st.session_state.username, "bank": tb_bank.strip(), "saldo": tb_saldo, "tgl": tb_tanggal, "cat": tb_catatan.strip() or None})
                                     conn.commit()
                                 st.success(f"✅ Tabungan '{tb_bank}' berhasil disimpan!")
+                                st.cache_data.clear()
                                 st.rerun()
                             except Exception as tb_err:
                                 st.error(f"Gagal menyimpan tabungan: {tb_err}")
@@ -547,108 +640,195 @@ try:
 
 
             # --- TAMPILKAN PORTFOLIO SUMMARY & DATA ---
-            if df_port.empty:
+            if df_port.empty and df_tabungan.empty:
                 st.info("ℹ️ Portofolio Anda masih kosong. Gunakan form di atas untuk menambahkan aset pertama Anda.")
             else:
-                # --- FITUR EDIT/HAPUS TRANSAKSI (Expander) ---
-                with st.expander("✏️ Edit / 🗑️ Hapus Transaksi", expanded=False):
-                    st.write("Pilih transaksi yang ingin diubah atau dihapus:")
-                    
-                    pilihan_riwayat = []
-                    for _, row in df_port.iterrows():
-                        jumlah_disp = f"{row['jumlah']/100:.2f} Lot" if "Saham" in row["nama_aset"] else f"{row['jumlah']:.2f} Gram"
-                        nama_disp = "Emas" if row["nama_aset"] == "Emas (IDR/gram)" else row["nama_aset"]
-                        desc = f"ID {row['id']} | {row['tanggal_beli']} | {nama_disp} - {jumlah_disp} @ Rp {row['harga_beli']:,.2f}"
-                        pilihan_riwayat.append((row['id'], desc))
-                    
-                    if pilihan_riwayat:
-                        dict_pilihan = dict(pilihan_riwayat)
-                        tx_id_pilihan = st.selectbox(
-                            "Pilih Transaksi:", 
-                            options=list(dict_pilihan.keys()), 
-                            format_func=lambda x: dict_pilihan[x],
-                            key="edit_tx_select"
-                        )
-                        
-                        tx_detail = df_port[df_port["id"] == tx_id_pilihan].iloc[0]
-                        apakah_saham_edit = "Saham" in tx_detail["nama_aset"]
-                        jumlah_edit_default = float(tx_detail["jumlah"] / 100 if apakah_saham_edit else tx_detail["jumlah"])
-                        
-                        kol_edit1, kol_edit2 = st.columns(2)
-                        with kol_edit1:
-                            label_jumlah_edit = "Jumlah Lot" if apakah_saham_edit else "Jumlah Gram"
-                            new_jumlah = st.number_input(f"{label_jumlah_edit}:", min_value=0.01, value=jumlah_edit_default, step=1.0 if apakah_saham_edit else 0.1, key="edit_jumlah")
-                        with kol_edit2:
-                            label_harga_edit = "Harga Beli per Lembar (Rupiah)" if apakah_saham_edit else "Harga Beli per Gram (Rupiah)"
-                            new_harga = st.number_input(f"{label_harga_edit}:", min_value=1.0, value=float(tx_detail["harga_beli"]), step=100.0 if apakah_saham_edit else 1000.0, key="edit_harga")
-                        
-                        new_tanggal = st.date_input("Tanggal Pembelian:", value=pd.to_datetime(tx_detail["tanggal_beli"]).date(), key="edit_tanggal")
-                        
-                        kol_tombol1, kol_tombol2 = st.columns(2)
-                        with kol_tombol1:
-                            tombol_update = st.button("💾 Simpan Perubahan", use_container_width=True)
-                            if tombol_update:
-                                jumlah_simpan_edit = new_jumlah * 100 if apakah_saham_edit else new_jumlah
-                                try:
-                                    engine = create_engine(ALAMAT_DATABASE)
-                                    with engine.connect() as conn:
-                                        conn.execute(
-                                            text("""
-                                                UPDATE "APP_ASSET_TRACKER".portofolio 
-                                                SET jumlah = :jumlah, harga_beli = :harga, tanggal_beli = :tanggal, updated_at = CURRENT_TIMESTAMP
-                                                WHERE id = :id AND username = :username
-                                            """),
-                                            {
-                                                "jumlah": jumlah_simpan_edit,
-                                                "harga": new_harga,
-                                                "tanggal": new_tanggal,
-                                                "id": tx_id_pilihan,
-                                                "username": st.session_state.username
-                                            }
-                                        )
-                                        conn.commit()
-                                    st.success("Transaksi berhasil diperbarui!")
-                                    st.cache_data.clear()
-                                    st.rerun()
-                                except Exception as upd_err:
-                                    st.error(f"Gagal memperbarui transaksi: {upd_err}")
-                                    
-                        with kol_tombol2:
-                            tombol_delete = st.button("🗑️ Hapus Transaksi", use_container_width=True, type="primary")
-                            if tombol_delete:
-                                try:
-                                    engine = create_engine(ALAMAT_DATABASE)
-                                    with engine.connect() as conn:
-                                        conn.execute(
-                                            text('DELETE FROM "APP_ASSET_TRACKER".portofolio WHERE id = :id AND username = :username'),
-                                            {"id": tx_id_pilihan, "username": st.session_state.username}
-                                        )
-                                        conn.commit()
-                                    st.warning("Transaksi berhasil dihapus!")
-                                    st.cache_data.clear()
-                                    st.rerun()
-                                except Exception as del_err:
-                                    st.error(f"Gagal menghapus transaksi: {del_err}")
+                # --- FITUR EDIT/HAPUS TRANSAKSI & TABUNGAN (Expander) ---
+                with st.expander("✏️ Edit / 🗑️ Hapus Transaksi & Tabungan", expanded=False):
+                    tipe_edit_opsi = []
+                    if not df_port.empty:
+                        tipe_edit_opsi.append("📈 Investasi (Saham & Emas)")
+                    if not df_tabungan.empty:
+                        tipe_edit_opsi.append("💰 Tabungan")
+
+                    if not tipe_edit_opsi:
+                        st.info("Belum ada data transaksi atau tabungan yang tercatat.")
                     else:
-                        st.info("Tidak ada transaksi untuk diubah.")
-                
-                df_port_summary = df_port.copy()
+                        if len(tipe_edit_opsi) > 1:
+                            tipe_edit = st.radio(
+                                "Pilih Kategori yang Ingin Diubah / Dihapus:",
+                                tipe_edit_opsi,
+                                horizontal=True,
+                                key="radio_tipe_edit"
+                            )
+                        else:
+                            tipe_edit = tipe_edit_opsi[0]
 
-                # Ambil data tabungan
-                try:
-                    eng_tb = create_engine(ALAMAT_DATABASE)
-                    with eng_tb.connect() as c_tb:
-                        rows_tb = c_tb.execute(text(
-                            'SELECT nama_bank, saldo, tanggal FROM "APP_ASSET_TRACKER".tabungan WHERE username = :u ORDER BY tanggal DESC'
-                        ), {"u": st.session_state.username}).fetchall()
-                    df_tabungan = pd.DataFrame(rows_tb, columns=["nama_bank", "saldo", "tanggal"]) if rows_tb else pd.DataFrame(columns=["nama_bank", "saldo", "tanggal"])
-                except:
-                    df_tabungan = pd.DataFrame(columns=["nama_bank", "saldo", "tanggal"])
+                        if tipe_edit == "📈 Investasi (Saham & Emas)":
+                            st.write("Pilih transaksi investasi yang ingin diubah atau dihapus:")
+                            pilihan_riwayat = []
+                            for _, row in df_port.iterrows():
+                                jumlah_disp = f"{row['jumlah']/100:.2f} Lot" if "Saham" in row["nama_aset"] else f"{row['jumlah']:.2f} Gram"
+                                nama_disp = "Emas" if row["nama_aset"] == "Emas (IDR/gram)" else row["nama_aset"]
+                                desc = f"ID {row['id']} | {row['tanggal_beli']} | {nama_disp} - {jumlah_disp} @ Rp {row['harga_beli']:,.2f}"
+                                pilihan_riwayat.append((row['id'], desc))
 
-                total_tabungan = float(df_tabungan["saldo"].sum()) if not df_tabungan.empty else 0.0
+                            if pilihan_riwayat:
+                                dict_pilihan = dict(pilihan_riwayat)
+                                tx_id_pilihan = st.selectbox(
+                                    "Pilih Transaksi:", 
+                                    options=list(dict_pilihan.keys()), 
+                                    format_func=lambda x: dict_pilihan[x],
+                                    key="edit_tx_select"
+                                )
 
-                dict_harga_terbaru = dict(zip(df_terbaru["nama_aset"], df_terbaru["harga_tutup"]))
-                df_port_summary["harga_sekarang"] = df_port_summary["nama_aset"].map(dict_harga_terbaru).fillna(0.0)
+                                tx_detail = df_port[df_port["id"] == tx_id_pilihan].iloc[0]
+                                apakah_saham_edit = "Saham" in tx_detail["nama_aset"]
+                                jumlah_edit_default = float(tx_detail["jumlah"] / 100 if apakah_saham_edit else tx_detail["jumlah"])
+
+                                kol_edit1, kol_edit2 = st.columns(2)
+                                with kol_edit1:
+                                    label_jumlah_edit = "Jumlah Lot" if apakah_saham_edit else "Jumlah Gram"
+                                    new_jumlah = st.number_input(f"{label_jumlah_edit}:", min_value=0.01, value=jumlah_edit_default, step=1.0 if apakah_saham_edit else 0.1, key="edit_jumlah")
+                                with kol_edit2:
+                                    label_harga_edit = "Harga Beli per Lembar (Rupiah)" if apakah_saham_edit else "Harga Beli per Gram (Rupiah)"
+                                    new_harga = st.number_input(f"{label_harga_edit}:", min_value=1.0, value=float(tx_detail["harga_beli"]), step=100.0 if apakah_saham_edit else 1000.0, key="edit_harga")
+
+                                new_tanggal = st.date_input("Tanggal Pembelian:", value=pd.to_datetime(tx_detail["tanggal_beli"]).date(), key="edit_tanggal")
+
+                                kol_tombol1, kol_tombol2 = st.columns(2)
+                                with kol_tombol1:
+                                    tombol_update = st.button("💾 Simpan Perubahan Investasi", use_container_width=True, key="btn_simpan_inv")
+                                    if tombol_update:
+                                        jumlah_simpan_edit = new_jumlah * 100 if apakah_saham_edit else new_jumlah
+                                        try:
+                                            engine = create_engine(ALAMAT_DATABASE)
+                                            with engine.connect() as conn:
+                                                conn.execute(
+                                                    text("""
+                                                        UPDATE "APP_ASSET_TRACKER".portofolio 
+                                                        SET jumlah = :jumlah, harga_beli = :harga, tanggal_beli = :tanggal, updated_at = CURRENT_TIMESTAMP
+                                                        WHERE id = :id AND username = :username
+                                                    """),
+                                                    {
+                                                        "jumlah": jumlah_simpan_edit,
+                                                        "harga": new_harga,
+                                                        "tanggal": new_tanggal,
+                                                        "id": tx_id_pilihan,
+                                                        "username": st.session_state.username
+                                                    }
+                                                )
+                                                conn.commit()
+                                            st.success("Transaksi berhasil diperbarui!")
+                                            st.cache_data.clear()
+                                            st.rerun()
+                                        except Exception as upd_err:
+                                            st.error(f"Gagal memperbarui transaksi: {upd_err}")
+
+                                with kol_tombol2:
+                                    tombol_delete = st.button("🗑️ Hapus Transaksi Investasi", use_container_width=True, type="primary", key="btn_del_inv")
+                                    if tombol_delete:
+                                        try:
+                                            engine = create_engine(ALAMAT_DATABASE)
+                                            with engine.connect() as conn:
+                                                conn.execute(
+                                                    text('DELETE FROM "APP_ASSET_TRACKER".portofolio WHERE id = :id AND username = :username'),
+                                                    {"id": tx_id_pilihan, "username": st.session_state.username}
+                                                )
+                                                conn.commit()
+                                            st.warning("Transaksi berhasil dihapus!")
+                                            st.cache_data.clear()
+                                            st.rerun()
+                                        except Exception as del_err:
+                                            st.error(f"Gagal menghapus transaksi: {del_err}")
+                            else:
+                                st.info("Tidak ada transaksi investasi untuk diubah.")
+
+                        elif tipe_edit == "💰 Tabungan":
+                            st.write("Pilih catatan tabungan yang ingin diubah atau dihapus:")
+                            pilihan_tb = []
+                            for _, tb_row in df_tabungan.iterrows():
+                                ket_catatan = f" ({tb_row['catatan']})" if pd.notna(tb_row.get("catatan")) and tb_row.get("catatan") else ""
+                                desc_tb = f"ID {tb_row['id']} | {tb_row['tanggal']} | {tb_row['nama_bank']} - Rp {float(tb_row['saldo']):,.0f}{ket_catatan}"
+                                pilihan_tb.append((tb_row['id'], desc_tb))
+
+                            if pilihan_tb:
+                                dict_pilihan_tb = dict(pilihan_tb)
+                                tb_id_pilihan = st.selectbox(
+                                    "Pilih Tabungan:",
+                                    options=list(dict_pilihan_tb.keys()),
+                                    format_func=lambda x: dict_pilihan_tb[x],
+                                    key="edit_tb_select"
+                                )
+
+                                tb_detail = df_tabungan[df_tabungan["id"] == tb_id_pilihan].iloc[0]
+
+                                edit_bank = st.text_input("Nama Bank / Lembaga:", value=str(tb_detail["nama_bank"]), key="edit_tb_bank")
+                                kol_e_tb1, kol_e_tb2 = st.columns(2)
+                                with kol_e_tb1:
+                                    edit_saldo = st.number_input("Jumlah Saldo (Rp):", min_value=0.0, value=float(tb_detail["saldo"]), step=10000.0, format="%.0f", key="edit_tb_saldo")
+                                with kol_e_tb2:
+                                    edit_tgl = st.date_input("Tanggal Pencatatan:", value=pd.to_datetime(tb_detail["tanggal"]).date(), key="edit_tb_tgl")
+
+                                val_catatan = str(tb_detail["catatan"]) if pd.notna(tb_detail.get("catatan")) and tb_detail.get("catatan") is not None else ""
+                                edit_cat = st.text_area("Catatan (opsional):", value=val_catatan, height=68, key="edit_tb_catatan")
+
+                                kol_tb_act1, kol_tb_act2 = st.columns(2)
+                                with kol_tb_act1:
+                                    if st.button("💾 Simpan Perubahan Tabungan", use_container_width=True, key="btn_save_tb"):
+                                        if not edit_bank.strip():
+                                            st.error("⚠️ Nama bank tidak boleh kosong.")
+                                        elif edit_saldo <= 0:
+                                            st.error("⚠️ Saldo harus lebih dari 0.")
+                                        else:
+                                            try:
+                                                engine = create_engine(ALAMAT_DATABASE)
+                                                with engine.connect() as conn:
+                                                    conn.execute(
+                                                        text("""
+                                                            UPDATE "APP_ASSET_TRACKER".tabungan 
+                                                            SET nama_bank = :bank, saldo = :saldo, tanggal = :tgl, catatan = :cat
+                                                            WHERE id = :id AND username = :username
+                                                        """),
+                                                        {
+                                                            "bank": edit_bank.strip(),
+                                                            "saldo": edit_saldo,
+                                                            "tgl": edit_tgl,
+                                                            "cat": edit_cat.strip() or None,
+                                                            "id": tb_id_pilihan,
+                                                            "username": st.session_state.username
+                                                        }
+                                                    )
+                                                    conn.commit()
+                                                st.success("✅ Tabungan berhasil diperbarui!")
+                                                st.cache_data.clear()
+                                                st.rerun()
+                                            except Exception as upd_tb_err:
+                                                st.error(f"Gagal memperbarui tabungan: {upd_tb_err}")
+                                with kol_tb_act2:
+                                    if st.button("🗑️ Hapus Tabungan", use_container_width=True, type="primary", key="btn_delete_tb"):
+                                        try:
+                                            engine = create_engine(ALAMAT_DATABASE)
+                                            with engine.connect() as conn:
+                                                conn.execute(
+                                                    text('DELETE FROM "APP_ASSET_TRACKER".tabungan WHERE id = :id AND username = :username'),
+                                                    {"id": tb_id_pilihan, "username": st.session_state.username}
+                                                )
+                                                conn.commit()
+                                            st.warning("Catatan tabungan berhasil dihapus!")
+                                            st.cache_data.clear()
+                                            st.rerun()
+                                        except Exception as del_tb_err:
+                                            st.error(f"Gagal menghapus tabungan: {del_tb_err}")
+                            else:
+                                st.info("Tidak ada catatan tabungan untuk diubah.")
+
+                dict_harga_terbaru = dict(zip(df_terbaru["nama_aset"], df_terbaru["harga_tutup"])) if not df_terbaru.empty else {}
+                if not df_port.empty:
+                    df_port_summary = df_port.copy()
+                    df_port_summary["harga_sekarang"] = df_port_summary["nama_aset"].map(dict_harga_terbaru).fillna(0.0)
+                else:
+                    df_port_summary = pd.DataFrame(columns=["id", "nama_aset", "jumlah", "harga_beli", "tanggal_beli", "harga_sekarang", "total_investasi", "nilai_sekarang", "profit_loss"])
 
                 df_port_summary["total_investasi"] = df_port_summary["jumlah"] * df_port_summary["harga_beli"]
                 df_port_summary["nilai_sekarang"] = df_port_summary["jumlah"] * df_port_summary["harga_sekarang"]
@@ -855,6 +1035,56 @@ try:
                         use_container_width=True,
                         hide_index=True
                     )
+
+        with tab_ai_advisor:
+            st.subheader("🤖 AI Senior Investment Advisor & Asset Performance Monitoring")
+            st.markdown("Analisis komprehensif alokasi aset, kinerja return, dan **saran pembelian optimal (Buy Advice)** berbasis AI.")
+            
+            # Kumpulkan summary data pengguna
+            summary_port = {
+                "username": st.session_state.username,
+                "total_modal": total_investasi_port if 'total_investasi_port' in locals() else 0.0,
+                "nilai_sekarang": nilai_sekarang_port if 'nilai_sekarang_port' in locals() else 0.0,
+                "profit_loss": profit_loss_port if 'profit_loss_port' in locals() else 0.0,
+                "profit_loss_pct": profit_loss_persen_port if 'profit_loss_persen_port' in locals() else 0.0,
+            }
+            
+            df_g_summary = df_grouped if 'df_grouped' in locals() else pd.DataFrame()
+            tb_val = total_tabungan if 'total_tabungan' in locals() else 0.0
+            
+            kol_ai_1, kol_ai_2 = st.columns([1, 2])
+            with kol_ai_1:
+                st.markdown("### 📊 Alokasi Portofolio Anda")
+                if not df_g_summary.empty:
+                    df_pie = df_g_summary.copy()
+                    df_pie["nama_aset"] = df_pie["nama_aset"].replace("Emas (IDR/gram)", "Emas")
+                    if tb_val > 0:
+                        df_pie = pd.concat([df_pie, pd.DataFrame([{"nama_aset": "Tabungan Cash", "nilai_sekarang": tb_val}])], ignore_index=True)
+                    
+                    chart_pie = alt.Chart(df_pie).mark_arc(innerRadius=50).encode(
+                        theta=alt.Theta(field="nilai_sekarang", type="quantitative"),
+                        color=alt.Color(field="nama_aset", type="nominal", title="Aset"),
+                        tooltip=[alt.Tooltip("nama_aset", title="Aset"), alt.Tooltip("nilai_sekarang", title="Nilai (Rp)", format=",.0f")]
+                    ).properties(height=300)
+                    st.altair_chart(chart_pie, use_container_width=True)
+                else:
+                    st.info("Tambahkan aset terlebih dahulu untuk melihat alokasi.")
+                    
+            with kol_ai_2:
+                st.markdown("### 💡 Minta Nasihat Investasi AI")
+                st.write("Tekan tombol di bawah ini untuk menghasilkan analisis mendalam & rekomendasi aksi beli dari **AI Senior Advisor**:")
+                
+                if st.button("🚀 Hasilkan Nasihat Optimalisasi AI", type="primary", use_container_width=True):
+                    with st.spinner("🤖 AI Senior Advisor sedang mengevaluasi portofolio & kondisi pasar..."):
+                        hasil_ai = dapatkan_analisis_ai_advisor(summary_port, df_g_summary, tb_val, df)
+                        if hasil_ai["status"] == "sukses":
+                            st.session_state["analisis_ai_cache"] = hasil_ai["analisis"]
+                        else:
+                            st.error(hasil_ai["pesan"])
+                            
+                if "analisis_ai_cache" in st.session_state:
+                    st.markdown("---")
+                    st.markdown(st.session_state["analisis_ai_cache"])
 
 except Exception as e:
     st.error(f"❌ Gagal memuat data dari semua jalur. Detail: {e}")
