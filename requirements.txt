@@ -5,3 +5,7 @@ sqlalchemy
 psycopg2-binary
 streamlit
 yfinance
+python-dotenv
+google-genai
+requests
+altair

@@ -341,10 +341,20 @@ def hitung_tren_total_portofolio(df_pasar, df_port):
 
 
 import os
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
-load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+def ambil_gemini_api_key() -> str:
+    key = os.getenv("GEMINI_API_KEY", "")
+    if not key and hasattr(st, "secrets"):
+        try:
+            key = st.secrets.get("GEMINI_API_KEY", "")
+        except Exception:
+            pass
+    return key
 
 def dapatkan_analisis_ai_advisor(summary_port: dict, df_grouped: pd.DataFrame, total_tabungan: float, df_pasar: pd.DataFrame) -> dict:
     """
@@ -354,12 +364,18 @@ def dapatkan_analisis_ai_advisor(summary_port: dict, df_grouped: pd.DataFrame, t
     try:
         from google import genai
         from google.genai import types
+    except ImportError:
+        return {
+            "status": "error",
+            "pesan": "Library 'google-genai' belum terpasang di sistem. Harap periksa requirements.txt."
+        }
         
-        api_key = GEMINI_API_KEY or os.getenv("GEMINI_API_KEY", "")
+    try:
+        api_key = ambil_gemini_api_key()
         if not api_key:
             return {
                 "status": "error",
-                "pesan": "GEMINI_API_KEY belum dikonfigurasi pada file .env."
+                "pesan": "GEMINI_API_KEY belum dikonfigurasi pada file .env atau Secrets Streamlit Cloud."
             }
             
         client = genai.Client(api_key=api_key)
