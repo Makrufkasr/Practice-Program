@@ -42,7 +42,7 @@ def init_db_auth():
         
         # Tambah kolom username ke tabel portofolio jika belum ada untuk isolasi user
         alter_portofolio_query = """
-        ALTER TABLE "APP_ASSET_TRACKER".portofolio ADD COLUMN IF NOT EXISTS username VARCHAR(50) DEFAULT 'admin';
+        ALTER TABLE "APP_ASSET_TRACKER".portofolio ADD COLUMN IF NOT EXISTS username VARCHAR(50) DEFAULT 'Aan';
         """
         conn.execute(text(alter_portofolio_query))
         conn.commit()
@@ -53,7 +53,7 @@ def init_db_auth():
         
         if result == 0:
             # Buat pengguna admin default
-            default_username = "admin"
+            default_username = "Aan"
             default_password = "admin123"
             hash_pwd = hash_password(default_password)
             
@@ -66,7 +66,7 @@ def init_db_auth():
                 {
                     "username": default_username,
                     "password_hash": hash_pwd,
-                    "nama_lengkap": "Administrator Utama",
+                    "nama_lengkap": "Aan",
                     "role": "admin"
                 }
             )
@@ -166,7 +166,7 @@ def ubah_role_pengguna(username, role_baru):
 
 def hapus_pengguna(username):
     """Menghapus pengguna dari database."""
-    if username == "admin":
+    if username in ["Aan", "admin"]:
         return {"status": "gagal", "pesan": "Akun admin utama tidak dapat dihapus."}
         
     query = 'DELETE FROM "APP_ASSET_TRACKER".pengguna WHERE username = :username;'

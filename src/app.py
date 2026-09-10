@@ -167,7 +167,7 @@ if st.session_state.role == "admin":
 
             st.markdown("**Ubah Peran Pengguna**")
             with st.form("form_ubah_role_sidebar", clear_on_submit=False):
-                target_user_role_sb = st.selectbox("Pilih Pengguna:", options=[u["username"] for u in list_users if u["username"] != "admin"], key="target_user_role_sb")
+                target_user_role_sb = st.selectbox("Pilih Pengguna:", options=[u["username"] for u in list_users if u["username"] not in ["Aan", "admin"] and u.get("role") != "admin"], key="target_user_role_sb")
                 new_role_sb = st.selectbox("Peran Baru:", options=["user", "admin"], key="new_role_sb")
                 submit_role_sb = st.form_submit_button("Simpan Peran", use_container_width=True)
                 if submit_role_sb:
@@ -195,7 +195,7 @@ if st.session_state.role == "admin":
 
             st.markdown("**🗑️ Hapus Pengguna**")
             with st.form("form_hapus_user_sidebar", clear_on_submit=False):
-                non_admin_users = [u["username"] for u in list_users if u["username"] != "admin"]
+                non_admin_users = [u["username"] for u in list_users if u["username"] not in ["Aan", "admin"] and u.get("role") != "admin"]
                 if non_admin_users:
                     target_user_del_sb = st.selectbox("Pilih Pengguna:", options=non_admin_users, key="target_user_del_sb")
                     submit_del_sb = st.form_submit_button("Hapus Pengguna", use_container_width=True, type="primary")
@@ -358,7 +358,7 @@ def ambil_gemini_api_key() -> str:
 
 def dapatkan_analisis_ai_advisor(summary_port: dict, df_grouped: pd.DataFrame, total_tabungan: float, df_pasar: pd.DataFrame) -> dict:
     """
-    Menggunakan Gemini AI dengan persona Senior Investment Advisor untuk menganalisis portofolio pengguna 'admin'
+    Menggunakan Gemini AI dengan persona Senior Investment Advisor untuk menganalisis portofolio pengguna 'Aan'
     dan memberikan nasihat beli (buy advice) serta alokasi yang optimal.
     """
     try:
@@ -394,7 +394,7 @@ def dapatkan_analisis_ai_advisor(summary_port: dict, df_grouped: pd.DataFrame, t
         
         prompt = f"""
 Anda adalah seorang **Senior Investment Advisor & Wealth Manager** terkemuka.
-Analisis portofolio pengguna bernama **'{summary_port.get('username', 'admin')}'** berikut:
+Analisis portofolio pengguna bernama **'{summary_port.get('username', 'Aan')}'** berikut:
 
 ### Metadata & Kinerja Portofolio Pengguna:
 - Total Modal Terinvestasi: Rp {summary_port.get('total_modal', 0):,.0f}
