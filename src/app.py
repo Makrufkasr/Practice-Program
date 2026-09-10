@@ -396,6 +396,11 @@ def dapatkan_analisis_ai_advisor(summary_port: dict, df_grouped: pd.DataFrame, t
 Anda adalah seorang **Senior Investment Advisor & Wealth Manager** terkemuka.
 Analisis portofolio pengguna bernama **'{summary_port.get('username', 'Aan')}'** berikut:
 
+### OBJEKTIF & ROADMAP STRATEGIS INVESTOR (7-YEAR SNOWBALL STRATEGY):
+- Filosofi Utama: "Besarkan dulu 'salju'-nya lewat active swing trading & growth investing selama 7 tahun (reinvestasikan 100% cuan). Setelah bolanya besar, barulah diparkir di saham-saham blue chip untuk dinikmati dividennya secara jangka panjang."
+- Fase Saat Ini: FASE 1 (Akumulasi Modal Pokok & Compounding).
+- Pedoman Penasihat: Optimalkan portofolio untuk pertumbuhan modal agresif terukur (Capital Gain), jangan menyarankan strategi pasif dividen di fase ini!
+
 ### Metadata & Kinerja Portofolio Pengguna:
 - Total Modal Terinvestasi: Rp {summary_port.get('total_modal', 0):,.0f}
 - Nilai Portofolio Saat Ini: Rp {summary_port.get('nilai_sekarang', 0):,.0f}
