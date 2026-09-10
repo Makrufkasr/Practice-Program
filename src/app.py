@@ -392,16 +392,23 @@ def dapatkan_analisis_ai_advisor(summary_port: dict, df_grouped: pd.DataFrame, t
         df_terbaru = df_pasar.sort_values("tanggal", ascending=False).groupby("nama_aset").first().reset_index()
         info_pasar = "\n".join([f"- {row['nama_aset']}: Rp {row['harga_tutup']:,.0f}" for _, row in df_terbaru.iterrows()])
         
-        prompt = f"""
-Anda adalah seorang **Senior Investment Advisor & Wealth Manager** terkemuka.
-Analisis portofolio pengguna bernama **'{summary_port.get('username', 'Aan')}'** berikut:
+        system_instruction = f"""Anda adalah seorang Senior Investment Advisor & Wealth Manager terkemuka.
+Analisis portofolio pengguna bernama '{summary_port.get('username', 'Aan')}'.
 
 ### OBJEKTIF & ROADMAP STRATEGIS INVESTOR (7-YEAR SNOWBALL STRATEGY):
 - Filosofi Utama: "Besarkan dulu 'salju'-nya lewat active swing trading & growth investing selama 7 tahun (reinvestasikan 100% cuan). Setelah bolanya besar, barulah diparkir di saham-saham blue chip untuk dinikmati dividennya secara jangka panjang."
 - Fase Saat Ini: FASE 1 (Akumulasi Modal Pokok & Compounding).
 - Pedoman Penasihat: Optimalkan portofolio untuk pertumbuhan modal agresif terukur (Capital Gain), jangan menyarankan strategi pasif dividen di fase ini!
+- DILARANG keras memanggil pengguna dengan sebutan 'admin'. Panggil Mas/Pak {summary_port.get('username', 'Aan')}.
 
-### Metadata & Kinerja Portofolio Pengguna:
+### Format Jawaban:
+1. Berikan Health Score Portofolio (skor 1-100) dan evaluasi diversifikasi asetnya saat ini.
+2. Berikan 3 Rekomendasi Beli (Buy Advice) yang konkrit & spesifik (Buy Area & Alokasi Modal %).
+3. Berikan Strategi Rebalancing ringkas agar portofolio tangguh menghadapi dinamika pasar.
+
+Format respon dengan Markdown yang rapi, profesional, dan visualisasi emoji yang menarik."""
+
+        user_content = f"""### Metadata & Kinerja Portofolio Pengguna:
 - Total Modal Terinvestasi: Rp {summary_port.get('total_modal', 0):,.0f}
 - Nilai Portofolio Saat Ini: Rp {summary_port.get('nilai_sekarang', 0):,.0f}
 - Total Profit/Loss: Rp {summary_port.get('profit_loss', 0):,.0f} ({summary_port.get('profit_loss_pct', 0):+.2f}%)
@@ -411,23 +418,13 @@ Analisis portofolio pengguna bernama **'{summary_port.get('username', 'Aan')}'**
 {text_rincian}
 
 ### Harga Pasar Terakhir:
-{info_pasar}
+{info_pasar}"""
 
----
-### Tugas Anda:
-1. Berikan **Health Score Portofolio** (skor 1-100) dan evaluasi diversifikasi asetnya saat ini.
-2. Berikan **3 Rekomendasi Beli (Buy Advice)** yang konkrit & spesifik (misal: kapan beli Emas saat koreksi, atau saham spesifik yang bagus diakumulasi) untuk membuat asetnya optimal. Sertakan:
-   - Nama Aset yang disarankan dibeli
-   - Alasan strategis (Teknikal/Fundamental)
-   - Target Harga Beli (Buy Area) & Alokasi Modal disarankan (%)
-3. Berikan **Strategi Rebalancing** ringkas agar portofolio tetap tangguh menghadapi inflasi & gejolak pasar.
-
-Format respon dengan Markdown yang rapi, profesional, dan menggunakan visualisasi emoji yang menarik.
-"""
         response = client.models.generate_content(
             model='gemini-2.5-flash',
-            contents=prompt,
+            contents=user_content,
             config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
                 temperature=0.4,
                 max_output_tokens=700
             )
