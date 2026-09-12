@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Gate Portal — Mas Aan Executive Suite</title>
+    <meta name="description" content="Portal Satu Pintu & Sistem Autentikasi Tunggal Aplikasi Mas Aan">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- VIEW 1: LOGIN CONTAINER -->
+    <div id="login-view" class="view-container">
+        <div class="glow-bg-top"></div>
+        <div class="glow-bg-bottom"></div>
+        <div class="login-card glass-panel">
+            <div class="brand-header">
+                <div class="brand-badge">
+                    <i class="ph-bold ph-shield-check"></i>
+                </div>
+                <h1 class="brand-title">ONE GATE SYSTEM</h1>
+                <p class="brand-subtitle">Executive Single Sign-On & Central Portal</p>
+            </div>
+
+            <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <div class="input-wrapper">
+                        <i class="ph ph-user"></i>
+                        <input type="text" id="username" name="username" placeholder="Masukkan username (cth: Aan)" required autocomplete="username" autofocus>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <i class="ph ph-lock-key"></i>
+                        <input type="password" id="password" name="password" placeholder="Masukkan password" required autocomplete="current-password">
+                        <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('password', this)" title="Lihat password">
+                            <i class="ph ph-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="remember-me" checked>
+                        <span>Ingat sesi saya di perangkat ini</span>
+                    </label>
+                </div>
+
+                <button type="submit" id="btn-login" class="btn-primary">
+                    <span class="btn-text">Masuk ke Portal</span>
+                    <i class="ph-bold ph-arrow-right"></i>
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <span>Ekosistem Terintegrasi Mas Aan &copy; 2026</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 2: PORTAL DASHBOARD (SHOWN WHEN LOGGED IN) -->
+    <div id="portal-view" class="view-container hidden">
+        <!-- Top Navigation -->
+        <header class="navbar glass-panel">
+            <div class="nav-brand">
+                <div class="brand-badge small">
+                    <i class="ph-bold ph-shield-check"></i>
+                </div>
+                <div class="nav-title-group">
+                    <span class="nav-app-name">ONE GATE PORTAL</span>
+                    <span class="nav-org-tag">Mas Aan Executive Suite</span>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <div class="user-pill glass-panel">
+                    <div class="user-avatar">
+                        <i class="ph-bold ph-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <span id="user-display-name" class="user-name">Mas Aan</span>
+                        <span id="user-role-tag" class="user-role">Administrator</span>
+                    </div>
+                </div>
+
+                <button class="btn-icon" onclick="openPasswordModal()" title="Ubah Password">
+                    <i class="ph ph-gear"></i>
+                </button>
+                <button class="btn-icon btn-logout" onclick="handleLogout()" title="Keluar">
+                    <i class="ph ph-sign-out"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Welcome Header -->
+            <section class="welcome-section">
+                <div class="welcome-text">
+                    <div class="greeting-row">
+                        <h2 class="welcome-heading">Selamat Datang, <span id="welcome-user">Mas Aan</span> 👋</h2>
+                        <span class="status-live-badge"><span class="pulse-dot"></span> Seluruh Sistem Terhubung</span>
+                    </div>
+                    <p class="welcome-desc">Akses seluruh aplikasi keuangan, operasional vendor, dan bot asisten cerdas melalui satu gerbang autentikasi terpadu.</p>
+                </div>
+            </section>
+
+            <!-- Live Multi-App Summary Metrics -->
+            <section class="metrics-grid">
+                <div class="metric-card glass-panel">
+                    <div class="metric-header">
+                        <span class="metric-label">Total Kekayaan Bersih (Aset)</span>
+                        <div class="metric-icon-box blue">
+                            <i class="ph-bold ph-coins"></i>
+                        </div>
+                    </div>
+                    <div id="stat-total-asset" class="metric-value">Memuat...</div>
+                    <div class="metric-footnote">Akumulasi Saldo Tabungan & Portofolio Saham/Emas</div>
+                </div>
+
+                <div class="metric-card glass-panel">
+                    <div class="metric-header">
+                        <span class="metric-label">Kas & Tabungan Bank</span>
+                        <div class="metric-icon-box green">
+                            <i class="ph-bold ph-bank"></i>
+                        </div>
+                    </div>
+                    <div id="stat-tabungan" class="metric-value">Memuat...</div>
+                    <div class="metric-footnote">Saldo kas riil siap pakai di Bank Mandiri & BCA</div>
+                </div>
+
+                <div class="metric-card glass-panel">
+                    <div class="metric-header">
+                        <span class="metric-label">Investasi & Saham Aktif</span>
+                        <div class="metric-icon-box purple">
+                            <i class="ph-bold ph-chart-line-up"></i>
+                        </div>
+                    </div>
+                    <div id="stat-investasi" class="metric-value">Memuat...</div>
+                    <div class="metric-footnote">Portofolio Saham (BBRI, TPIA) & Emas Fisik</div>
+                </div>
+
+                <div class="metric-card glass-panel">
+                    <div class="metric-header">
+                        <span class="metric-label">Kewajiban Vendor Tertunda</span>
+                        <div class="metric-icon-box pink">
+                            <i class="ph-bold ph-receipt"></i>
+                        </div>
+                    </div>
+                    <div id="stat-hutang-vendor" class="metric-value">Memuat...</div>
+                    <div id="stat-vendor-orders" class="metric-footnote">0 pesanan vendor konveksi belum lunas</div>
+                </div>
+            </section>
+
+            <!-- App Launcher Directory -->
+            <section class="apps-section">
+                <div class="section-title-group">
+                    <h3 class="section-title">Aplikasi & Layanan Terintegrasi</h3>
+                    <p class="section-subtitle">Klik untuk langsung membuka aplikasi tanpa perlu login berulang kali.</p>
+                </div>
+
+                <div id="apps-grid" class="apps-grid">
+                    <!-- Cards will be populated by app.js -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL: CHANGE PASSWORD -->
+    <div id="password-modal" class="modal-backdrop hidden" onclick="closeModalOnBackdrop(event)">
+        <div class="modal-card glass-panel">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <i class="ph-bold ph-key"></i>
+                    <h4>Ubah Password Akun</h4>
+                </div>
+                <button class="btn-close" onclick="closePasswordModal()">&times;</button>
+            </div>
+            <form id="change-password-form" onsubmit="handleChangePassword(event)">
+                <div class="input-group">
+                    <label for="old-password">Password Lama</label>
+                    <div class="input-wrapper">
+                        <i class="ph ph-lock-key"></i>
+                        <input type="password" id="old-password" required placeholder="Password saat ini">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="new-password">Password Baru</label>
+                    <div class="input-wrapper">
+                        <i class="ph ph-lock-key"></i>
+                        <input type="password" id="new-password" required placeholder="Minimal 6 karakter">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="confirm-password">Konfirmasi Password Baru</label>
+                    <div class="input-wrapper">
+                        <i class="ph ph-check"></i>
+                        <input type="password" id="confirm-password" required placeholder="Ulangi password baru">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closePasswordModal()">Batal</button>
+                    <button type="submit" id="btn-save-pwd" class="btn-primary">Simpan Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
