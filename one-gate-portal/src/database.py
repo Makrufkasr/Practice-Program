@@ -82,69 +82,82 @@ def get_db():
 
 
 def fetch_quick_metrics(username: str = "Aan") -> dict:
-    """Mengambil metrik ringkas terintegrasi untuk ditampilkan pada widget dashboard One Gate."""
+    """Mengambil metrik ringkas terintegrasi yang terisolasi secara privat per username."""
+    u_clean = username.strip() if username else "Aan"
     metrics = {
         "tabungan": 0.0,
         "investasi": 0.0,
         "hutang_vendor": 0.0,
         "total_asset": 0.0,
         "vendor_orders_pending": 0,
+        "pengeluaran_bulanan": 0.0,
         "status_bot": "Aktif & Berjalan"
     }
     try:
         with engine.connect() as conn:
-            # 1. Total Tabungan
+            # 1. Total Tabungan (Khusus username terkait)
             try:
                 res_tab = conn.execute(text(f"""
                     SELECT COALESCE(SUM(saldo), 0) 
                     FROM "{SCHEMA_ASSET_TRACKER}".tabungan 
-                    WHERE username = :u;
-                """), {"u": username}).scalar()
+                    WHERE LOWER(username) = LOWER(:u);
+                """), {"u": u_clean}).scalar()
                 metrics["tabungan"] = float(res_tab or 0.0)
             except Exception:
                 pass
 
-            # 2. Total Investasi Portofolio
+            # 2. Total Investasi Portofolio (Khusus username terkait)
             try:
-                # Ambil harga kpi_data terakhir
                 p_rows = conn.execute(text(f"""
                     SELECT p.nama_aset, p.jumlah, p.harga_beli,
                            COALESCE((
-                               SELECT k.harga_tutup 
-                               FROM "{SCHEMA_ASSET_TRACKER}".kpi_data k 
-                               WHERE k.nama_aset = p.nama_aset 
-                               ORDER BY k.tanggal DESC LIMIT 1
-                           ), p.harga_beli) as harga_pasar
+                                SELECT k.harga_tutup 
+                                FROM "{SCHEMA_ASSET_TRACKER}".kpi_data k 
+                                WHERE k.nama_aset = p.nama_aset 
+                                ORDER BY k.tanggal DESC LIMIT 1
+                            ), p.harga_beli) as harga_pasar
                     FROM "{SCHEMA_ASSET_TRACKER}".portofolio p
-                    WHERE p.username = :u;
-                """), {"u": username}).fetchall()
+                    WHERE LOWER(p.username) = LOWER(:u);
+                """), {"u": u_clean}).fetchall()
                 total_inv = sum(float(r[1] or 0.0) * float(r[3] or r[2] or 0.0) for r in p_rows)
                 metrics["investasi"] = round(total_inv, 2)
             except Exception:
                 pass
 
-            # 3. Kekurangan Bayar Vendor
+            # 3. Pengeluaran Keuangan (APP_FINANCIAL_PLANNING - Khusus username terkait)
             try:
-                res_vendor = conn.execute(text(f"""
-                    SELECT 
-                        COUNT(o.id) as pending_orders,
-                        COALESCE(SUM(o.vendor_cost - COALESCE(p.total_paid, 0)), 0) as total_debt
-                    FROM "{SCHEMA_VENDOR_TRACKER}".orders o
-                    LEFT JOIN (
-                        SELECT order_id, SUM(amount) as total_paid 
-                        FROM "{SCHEMA_VENDOR_TRACKER}".vendor_payments 
-                        GROUP BY order_id
-                    ) p ON o.id = p.order_id
-                    WHERE COALESCE(o.vendor_cost, 0) - COALESCE(p.total_paid, 0) > 0;
-                """)).fetchone()
-                if res_vendor:
-                    metrics["vendor_orders_pending"] = int(res_vendor[0] or 0)
-                    metrics["hutang_vendor"] = float(res_vendor[1] or 0.0)
+                res_exp = conn.execute(text(f"""
+                    SELECT COALESCE(SUM(amount), 0)
+                    FROM "{SCHEMA_FINANCIAL}".expenses
+                    WHERE LOWER(username) = LOWER(:u) AND is_active = TRUE;
+                """), {"u": u_clean}).scalar()
+                metrics["pengeluaran_bulanan"] = float(res_exp or 0.0)
             except Exception:
                 pass
 
+            # 4. Kekurangan Bayar Vendor (Khusus pemilik konveksi NEXAT / Aan)
+            if u_clean.lower() == "aan":
+                try:
+                    res_vendor = conn.execute(text(f"""
+                        SELECT 
+                            COUNT(o.id) as pending_orders,
+                            COALESCE(SUM(o.vendor_cost - COALESCE(p.total_paid, 0)), 0) as total_debt
+                        FROM "{SCHEMA_VENDOR_TRACKER}".orders o
+                        LEFT JOIN (
+                            SELECT order_id, SUM(amount) as total_paid 
+                            FROM "{SCHEMA_VENDOR_TRACKER}".vendor_payments 
+                            GROUP BY order_id
+                        ) p ON o.id = p.order_id
+                        WHERE COALESCE(o.vendor_cost, 0) - COALESCE(p.total_paid, 0) > 0;
+                    """)).fetchone()
+                    if res_vendor:
+                        metrics["vendor_orders_pending"] = int(res_vendor[0] or 0)
+                        metrics["hutang_vendor"] = float(res_vendor[1] or 0.0)
+                except Exception:
+                    pass
+
             metrics["total_asset"] = round(metrics["tabungan"] + metrics["investasi"], 2)
     except Exception as e:
-        logging.error(f"Error fetching quick metrics: {e}")
+        logging.error(f"Error fetching quick metrics for {username}: {e}")
 
     return metrics

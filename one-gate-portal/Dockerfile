@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install dependensi sistem untuk psycopg2
+# Install dependensi sistem
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
@@ -16,4 +16,5 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Jalankan dengan worker Uvicorn berkinerja tinggi
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--proxy-headers", "--forwarded-allow-ips", "*"]

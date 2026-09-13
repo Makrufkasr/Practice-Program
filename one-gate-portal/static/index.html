@@ -2,220 +2,898 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>One Gate Portal — Mas Aan Executive Suite</title>
-    <meta name="description" content="Portal Satu Pintu & Sistem Autentikasi Tunggal Aplikasi Mas Aan">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ecosystem Intelligence — Digital Command Center & Business OS</title>
+    <meta name="description" content="Pusat kendali ekosistem digital terintegrasi untuk bisnis apparel NEXAT, AI Assistant ASPIRAN!, pengelolaan keuangan, dan pemantauan aset.">
+    <meta name="theme-color" content="#070B14">
+    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=2.2.2">
 </head>
-<body>
+<body class="ecosystem-body">
+    <!-- Toast Notification -->
     <div id="toast" class="toast hidden"></div>
 
-    <!-- VIEW 1: LOGIN CONTAINER -->
-    <div id="login-view" class="view-container">
-        <div class="glow-bg-top"></div>
-        <div class="glow-bg-bottom"></div>
-        <div class="login-card glass-panel">
-            <div class="brand-header">
-                <div class="brand-badge">
-                    <i class="ph-bold ph-shield-check"></i>
+    <!-- =========================================================================
+         TOP NAVIGATION BAR
+         ========================================================================= -->
+    <nav class="navbar" id="main-nav">
+        <div class="nav-container">
+            <!-- Brand Logo -->
+            <a href="#hero" class="nav-logo" title="Ecosystem Intelligence">
+                <div class="logo-mark">
+                    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo-svg">
+                        <path d="M16 4L4 26H11L16 16L21 26H28L16 4Z" fill="url(#nav-logo-grad)"/>
+                        <path d="M16 16L12.5 23H19.5L16 16Z" fill="#60A5FA"/>
+                        <defs>
+                            <linearGradient id="nav-logo-grad" x1="4" y1="4" x2="28" y2="26" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#38BDF8"/>
+                                <stop offset="0.5" stop-color="#6366F1"/>
+                                <stop offset="1" stop-color="#10B981"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
                 </div>
-                <h1 class="brand-title">ONE GATE SYSTEM</h1>
-                <p class="brand-subtitle">Executive Single Sign-On & Central Portal</p>
+                <div class="logo-text-group">
+                    <span class="logo-title">Ecosystem Intelligence</span>
+                </div>
+            </a>
+
+            <!-- Navigation Links (Desktop) -->
+            <div class="nav-menu" id="nav-menu">
+                <a href="#hero" class="nav-link active" data-target="hero">Home</a>
+                <a href="#section-nexat" class="nav-link" data-target="section-nexat">NEXAT Apparel</a>
+                <a href="#section-aspiran" class="nav-link" data-target="section-aspiran">ASPIRAN! AI</a>
+                <a href="#section-finance" class="nav-link" data-target="section-finance">Finansial</a>
+                <a href="#section-asset" class="nav-link" data-target="section-asset">Asset Tracker</a>
+                <a href="#section-ecosystem" class="nav-link" data-target="section-ecosystem">Arsitektur</a>
             </div>
 
-            <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
-                <div class="input-group">
-                    <label for="username">Username</label>
-                    <div class="input-wrapper">
-                        <i class="ph ph-user"></i>
-                        <input type="text" id="username" name="username" placeholder="Masukkan username (cth: Aan)" required autocomplete="username" autofocus>
+            <!-- Auth Actions in Navbar -->
+            <div class="nav-actions">
+                <!-- Guest State: Striking Masuk Button -->
+                <div id="nav-guest-actions" class="auth-group">
+                    <button class="btn-nav-masuk" onclick="openLoginModal()" title="Masuk ke Sistem">
+                        <i class="ph-bold ph-sign-in"></i>
+                        <span>Masuk</span>
+                    </button>
+                </div>
+
+                <!-- Authenticated State: User Pill (Opens Settings Modal) + Superadmin Approval Bell + App Hub + Logout -->
+                <div id="nav-user-actions" class="auth-group hidden" style="display:flex;align-items:center;gap:8px;">
+                    <!-- Superadmin Approval Bell Notification (Visible for Aan) -->
+                    <button id="btn-admin-approvals" class="btn-nav-approval hidden" onclick="openApprovalModal()" title="Permintaan Registrasi Akun Baru">
+                        <i class="ph-bold ph-bell-ringing"></i>
+                        <span class="approval-badge-count" id="pending-approval-count">0</span>
+                    </button>
+
+                    <div class="user-badge-pill" onclick="openProfileSettingsModal()" title="Profil & Pengaturan Akun">
+                        <div class="user-avatar-sm"><i class="ph-bold ph-user"></i></div>
+                        <span class="user-name-txt" id="user-display-name">User</span>
+                        <span class="superadmin-badge-tag hidden" id="superadmin-badge-nav"><i class="ph-bold ph-crown"></i> SUPERADMIN</span>
+                    </div>
+                    <button class="btn-nav-hub" onclick="toggleAppHub()" title="Buka App Hub Drawer">
+                        <i class="ph-bold ph-squares-four"></i>
+                        <span>Hub</span>
+                    </button>
+                    <button class="btn-nav-logout" onclick="handleLogout(true)" title="Keluar dari Sesi">
+                        <i class="ph-bold ph-sign-out"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Scrollable Section Chips Bar -->
+        <div class="mobile-nav-bar">
+            <a href="#hero" class="mobile-nav-chip active" data-target="hero">Home</a>
+            <a href="#section-nexat" class="mobile-nav-chip" data-target="section-nexat">NEXAT</a>
+            <a href="#section-aspiran" class="mobile-nav-chip" data-target="section-aspiran">ASPIRAN! AI</a>
+            <a href="#section-finance" class="mobile-nav-chip" data-target="section-finance">Finansial</a>
+            <a href="#section-asset" class="mobile-nav-chip" data-target="section-asset">Asset Tracker</a>
+            <a href="#section-ecosystem" class="mobile-nav-chip" data-target="section-ecosystem">Arsitektur</a>
+        </div>
+    </nav>
+
+    <!-- =========================================================================
+         HERO SECTION: ANIMATED COMMAND CENTER
+         ========================================================================= -->
+    <header id="hero" class="hero-section">
+        <div class="hero-grid-container">
+            <!-- Left Hero Headline & Description -->
+            <div class="hero-left-content">
+                <span class="hero-tag">PERSONAL BUSINESS & LIFE OS</span>
+                <h1 class="hero-headline">
+                    One Ecosystem.<br>
+                    <span class="text-gradient">Everything Connected.</span>
+                </h1>
+                <p class="hero-desc">
+                    Satu ekosistem digital untuk mengelola operasional bisnis, intelijen AI, arus kas finansial, dan pertumbuhan aset dalam satu arsitektur terintegrasi.
+                </p>
+                <div class="hero-actions">
+                    <button class="btn-hero-primary" onclick="launchAppWithAuthCheck('nexat', '', 'Ecosystem Command Center')">
+                        <span>Buka Command Center</span>
+                        <i class="ph-bold ph-arrow-right"></i>
+                    </button>
+                    <a href="#section-nexat" class="btn-hero-ghost">
+                        <i class="ph-bold ph-play-circle"></i>
+                        <span>Eksplorasi Modul</span>
+                    </a>
+                </div>
+                <div class="hero-footnote">
+                    <span>Terhubung dengan 4 modul aktif & arsitektur multi-database Supabase PostgreSQL.</span>
+                </div>
+            </div>
+
+            <!-- Right Hero Visual Stage with Flowing Animated Circuits -->
+            <div class="hero-visual-stage">
+                <!-- SVG Connecting Circuits Canvas -->
+                <svg class="hero-circuit-svg" viewBox="0 0 600 520" preserveAspectRatio="none">
+                    <!-- Base Track Lines -->
+                    <path d="M 120 70 C 180 70, 240 180, 300 240" class="circuit-line" />
+                    <path d="M 480 70 C 420 70, 360 180, 300 240" class="circuit-line" />
+                    <path d="M 120 450 C 180 450, 240 340, 300 280" class="circuit-line" />
+                    <path d="M 480 450 C 420 450, 360 340, 300 280" class="circuit-line" />
+                    
+                    <!-- Animated Flowing Pulses -->
+                    <path d="M 120 70 C 180 70, 240 180, 300 240" class="circuit-pulse nexat" />
+                    <path d="M 480 70 C 420 70, 360 180, 300 240" class="circuit-pulse aspiran" />
+                    <path d="M 120 450 C 180 450, 240 340, 300 280" class="circuit-pulse finance" />
+                    <path d="M 480 450 C 420 450, 360 340, 300 280" class="circuit-pulse asset" />
+                </svg>
+
+                <!-- Center 3D Illustration & Hologram Ring -->
+                <div class="hero-center-art-wrapper">
+                    <div class="hero-hologram-orbit"></div>
+                    <div class="hero-center-art">
+                        <img src="/static/images/hero_character.jpg" alt="Ecosystem Intelligence Digital Guide">
                     </div>
                 </div>
 
-                <div class="input-group">
-                    <label for="password">Password</label>
-                    <div class="input-wrapper">
-                        <i class="ph ph-lock-key"></i>
-                        <input type="password" id="password" name="password" placeholder="Masukkan password" required autocomplete="current-password">
-                        <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('password', this)" title="Lihat password">
-                            <i class="ph ph-eye"></i>
+                <!-- Desktop Floating Levitating Nodes -->
+                <div class="hero-node-card pos-top-left" onclick="launchAppWithAuthCheck('nexat', '', 'NEXAT Project Apparel')">
+                    <div class="node-icon-box"><i class="ph-bold ph-t-shirt"></i></div>
+                    <div class="node-text-box">
+                        <h5>NEXAT</h5>
+                        <span>Business Management</span>
+                    </div>
+                </div>
+
+                <div class="hero-node-card pos-top-right" onclick="launchAppWithAuthCheck('aspiran', '', 'ASPIRAN! AI Assistant')">
+                    <div class="node-icon-box"><i class="ph-bold ph-robot"></i></div>
+                    <div class="node-text-box">
+                        <h5>ASPIRAN!</h5>
+                        <span>AI Assistant & BI</span>
+                    </div>
+                </div>
+
+                <div class="hero-node-card pos-bottom-left" onclick="launchAppWithAuthCheck('finance', '', 'Financial Management')">
+                    <div class="node-icon-box"><i class="ph-bold ph-currency-circle-dollar"></i></div>
+                    <div class="node-text-box">
+                        <h5>Financial</h5>
+                        <span>Financial Planning</span>
+                    </div>
+                </div>
+
+                <div class="hero-node-card pos-bottom-right" onclick="launchAppWithAuthCheck('asset-tracker', '', 'Asset Tracker')">
+                    <div class="node-icon-box"><i class="ph-bold ph-chart-donut"></i></div>
+                    <div class="node-text-box">
+                        <h5>Asset Tracker</h5>
+                        <span>Asset Intelligence</span>
+                    </div>
+                </div>
+
+                <!-- Mobile 2x2 Grid -->
+                <div class="mobile-hero-nodes-grid">
+                    <div class="mobile-hero-node-card" style="--card-border:#38BDF8;--card-color:#38BDF8;" onclick="launchAppWithAuthCheck('nexat', '', 'NEXAT Apparel')">
+                        <i class="ph-bold ph-t-shirt m-icon"></i>
+                        <div><h6>NEXAT</h6><span>Port 8002</span></div>
+                    </div>
+                    <div class="mobile-hero-node-card" style="--card-border:#6366F1;--card-color:#6366F1;" onclick="launchAppWithAuthCheck('aspiran', '', 'ASPIRAN! AI')">
+                        <i class="ph-bold ph-robot m-icon"></i>
+                        <div><h6>ASPIRAN!</h6><span>Telegram Bot</span></div>
+                    </div>
+                    <div class="mobile-hero-node-card" style="--card-border:#10B981;--card-color:#10B981;" onclick="launchAppWithAuthCheck('finance', '', 'Financial Management')">
+                        <i class="ph-bold ph-currency-circle-dollar m-icon"></i>
+                        <div><h6>Financial</h6><span>Port 8003</span></div>
+                    </div>
+                    <div class="mobile-hero-node-card" style="--card-border:#F59E0B;--card-color:#F59E0B;" onclick="launchAppWithAuthCheck('asset-tracker', '', 'Asset Tracker')">
+                        <i class="ph-bold ph-chart-donut m-icon"></i>
+                        <div><h6>Asset Tracker</h6><span>Streamlit App</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- =========================================================================
+         SECTION 01: NEXAT PROJECT APPAREL
+         ========================================================================= -->
+    <section id="section-nexat" class="ecosystem-section light-theme">
+        <div class="section-3col-grid">
+            <!-- Left: Info & Description & CTA -->
+            <div class="col-left-info">
+                <div class="section-badge-header">
+                    <span class="sec-number" style="color: #0284C7;">01</span>
+                    <span class="sec-brand-tag" style="color: #0284C7;"><i class="ph-bold ph-t-shirt"></i> NEXAT PROJECT APPAREL</span>
+                </div>
+                <h2 class="section-title">Manage the Business.<br>Understand the Operation.</h2>
+                <p class="section-desc">
+                    NEXAT adalah sistem manajemen bisnis untuk mengelola operasional apparel — mulai dari pemesanan konveksi, kalkulasi HPP, jadwal termin vendor, hingga laporan performa berkala.
+                </p>
+                <div class="feature-pill-rack">
+                    <span class="feat-pill"><i class="ph-bold ph-tag"></i> Produk</span>
+                    <span class="feat-pill"><i class="ph-bold ph-shopping-bag"></i> Pesanan</span>
+                    <span class="feat-pill"><i class="ph-bold ph-package"></i> Inventori</span>
+                    <span class="feat-pill"><i class="ph-bold ph-factory"></i> Produksi</span>
+                    <span class="feat-pill"><i class="ph-bold ph-file-text"></i> Laporan</span>
+                </div>
+                
+                <!-- Primary Action CTA -->
+                <button id="cta-btn-nexat" class="btn-section-cta theme-nexat" onclick="launchAppWithAuthCheck('nexat', '', 'NEXAT Project Apparel')">
+                    <span>Buka NEXAT Tracker</span>
+                    <div class="cta-icon-pill"><i class="ph-bold ph-arrow-square-out"></i></div>
+                </button>
+            </div>
+
+            <!-- Center: Character in Apparel Workshop -->
+            <div class="col-center-visual">
+                <span class="handwritten-note">From Operations To Insights ↗</span>
+                <div class="illustration-card">
+                    <img src="/static/images/nexat_character.jpg" alt="NEXAT Apparel Studio Workspace" loading="lazy">
+                </div>
+            </div>
+
+            <!-- Right: Live Metrics & Business Performance -->
+            <div class="col-right-display">
+                <div class="metric-2x2-grid">
+                    <div class="metric-stat-box">
+                        <span class="ms-label">Revenue</span>
+                        <div class="ms-value">Rp 24.500.000</div>
+                        <span class="ms-change"><i class="ph-bold ph-arrow-up-right"></i> +12.5%</span>
+                    </div>
+                    <div class="metric-stat-box">
+                        <span class="ms-label">Orders</span>
+                        <div class="ms-value">184 Batch</div>
+                        <span class="ms-change"><i class="ph-bold ph-arrow-up-right"></i> +8.2%</span>
+                    </div>
+                    <div class="metric-stat-box">
+                        <span class="ms-label">Gross Profit</span>
+                        <div class="ms-value">Rp 7.850.000</div>
+                        <span class="ms-change"><i class="ph-bold ph-arrow-up-right"></i> +15.3%</span>
+                    </div>
+                    <div class="metric-stat-box">
+                        <span class="ms-label">Inventory</span>
+                        <div class="ms-value">428 items</div>
+                        <span class="ms-change"><i class="ph-bold ph-arrow-up-right"></i> +6.7%</span>
+                    </div>
+                </div>
+
+                <div class="chart-preview-card">
+                    <h6>Business Performance Trend</h6>
+                    <div class="chart-svg-wrap">
+                        <svg viewBox="0 0 320 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+                            <path d="M0 65 Q 40 50, 80 55 T 160 35 T 240 25 T 320 10" stroke="#0284C7" stroke-width="3" fill="none"/>
+                            <path d="M0 65 Q 40 50, 80 55 T 160 35 T 240 25 T 320 10 L 320 80 L 0 80 Z" fill="url(#chart-fill-nexat)" opacity="0.15"/>
+                            <defs>
+                                <linearGradient id="chart-fill-nexat" x1="0" y1="0" x2="0" y2="80" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#0284C7"/>
+                                    <stop offset="1" stop-color="#0284C7" stop-opacity="0"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================================
+         SECTION 02: ASPIRAN! AI ASSISTANT
+         ========================================================================= -->
+    <section id="section-aspiran" class="ecosystem-section light-theme-alt">
+        <div class="section-3col-grid">
+            <!-- Left: Info & Description & CTA -->
+            <div class="col-left-info">
+                <div class="section-badge-header">
+                    <span class="sec-number" style="color: #4F46E5;">02</span>
+                    <span class="sec-brand-tag" style="color: #4F46E5;"><i class="ph-bold ph-robot"></i> ASPIRAN! AI & BI</span>
+                </div>
+                <h2 class="section-title">One Assistant.<br>Your Entire Ecosystem.</h2>
+                <p class="section-desc">
+                    ASPIRAN! adalah asisten pribadi Aan yang memahami seluruh aktivitas ekosistem — menghubungkan data operasional bisnis, rekomendasi screener IHSG, hingga sinkronisasi transaksi langsung via Telegram bot.
+                </p>
+                <div class="feature-pill-rack">
+                    <span class="feat-pill"><i class="ph-bold ph-telegram-logo"></i> @SeniorInvestorBot</span>
+                    <span class="feat-pill"><i class="ph-bold ph-sparkle"></i> Gemini Flash</span>
+                    <span class="feat-pill"><i class="ph-bold ph-chart-polar"></i> Saham IHSG</span>
+                </div>
+
+                <!-- Primary Action CTA -->
+                <button id="cta-btn-aspiran" class="btn-section-cta theme-aspiran" onclick="launchAppWithAuthCheck('aspiran', '', 'ASPIRAN! Telegram Bot')">
+                    <span>Buka ASPIRAN! di Telegram Bot</span>
+                    <div class="cta-icon-pill"><i class="ph-bold ph-arrow-square-out"></i></div>
+                </button>
+            </div>
+
+            <!-- Center: Interactive Telegram Chat Window -->
+            <div class="col-center-visual">
+                <div class="telegram-mockup-window">
+                    <div class="tg-header">
+                        <div class="tg-bot-identity">
+                            <div class="tg-bot-avatar"><i class="ph-bold ph-robot"></i></div>
+                            <div class="tg-bot-name">
+                                <h6>ASPIRAN! Bot</h6>
+                                <span>Online • Business Intelligence</span>
+                            </div>
+                        </div>
+                        <i class="ph-bold ph-dots-three-vertical" style="color: #94A3B8;"></i>
+                    </div>
+
+                    <!-- RBAC Lock Notification Banner if role lacks AI -->
+                    <div id="tg-ai-lock-banner" class="tg-lock-alert hidden">
+                        <i class="ph-bold ph-lock-key"></i>
+                        <span>Akses ASPIRAN! AI dibatasi untuk Administrator / Owner.</span>
+                    </div>
+
+                    <!-- Preset Query Chips -->
+                    <div class="tg-chips-scroll">
+                        <button class="tg-chip" onclick="askTelegramPrompt('nexat')">📦 /status_nexat</button>
+                        <button class="tg-chip" onclick="askTelegramPrompt('asset')">💎 /total_networth</button>
+                        <button class="tg-chip" onclick="askTelegramPrompt('screener')">📈 /screener BBRI TPIA</button>
+                        <button class="tg-chip" onclick="askTelegramPrompt('finance')">💵 /forecast_cashflow</button>
+                    </div>
+
+                    <!-- Chat Message Area -->
+                    <div class="tg-messages-scroll" id="telegram-messages-container">
+                        <div class="tg-msg user">
+                            <div class="tg-msg-bubble">
+                                <p>/status_nexat</p>
+                                <span class="tg-time">10:40 <i class="ph-bold ph-checks"></i></span>
+                            </div>
+                        </div>
+                        <div class="tg-msg bot">
+                            <div class="tg-msg-bubble">
+                                <div class="tg-bot-badge"><i class="ph-bold ph-sparkle"></i> ASPIRAN! AI</div>
+                                <p>Halo Aan! Operasional NEXAT Apparel: 6 batch produksi aktif, margin HPP rata-rata 38.4%, dan 3 PO vendor berjalan lancar.</p>
+                                <span class="tg-time">10:40</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Bar -->
+                    <form class="tg-input-bar" onsubmit="handleTelegramSubmit(event)">
+                        <input type="text" id="telegram-chat-input" placeholder="Tulis perintah bot..." autocomplete="off">
+                        <button type="submit" id="tg-send-btn" title="Kirim"><i class="ph-bold ph-paper-plane-right"></i></button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right: Connected Architecture Hub & Checklist -->
+            <div class="col-right-display">
+                <div class="aspiran-network-card">
+                    <div class="network-hub-diagram">
+                        <div class="hub-node-item"><i class="ph-bold ph-t-shirt" style="color:#0284C7;"></i> NEXAT</div>
+                        <div class="hub-center-core">
+                            <i class="ph-bold ph-robot"></i>
+                            <h6>ASPIRAN!</h6>
+                        </div>
+                        <div class="hub-node-item"><i class="ph-bold ph-currency-circle-dollar" style="color:#10B981;"></i> Finansial</div>
+                    </div>
+
+                    <ul class="aspiran-checklist">
+                        <li><i class="ph-bold ph-check-circle"></i> Menghubungkan seluruh modul aplikasi</li>
+                        <li><i class="ph-bold ph-check-circle"></i> Memberikan insight data secara real-time</li>
+                        <li><i class="ph-bold ph-check-circle"></i> Memudahkan pengambilan keputusan strategis</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================================
+         SECTION 03: FINANCIAL MANAGEMENT
+         ========================================================================= -->
+    <section id="section-finance" class="ecosystem-section light-theme">
+        <div class="section-3col-grid">
+            <!-- Left: Info & Description & CTA -->
+            <div class="col-left-info">
+                <div class="section-badge-header">
+                    <span class="sec-number" style="color: #059669;">03</span>
+                    <span class="sec-brand-tag" style="color: #059669;"><i class="ph-bold ph-currency-circle-dollar"></i> FINANCIAL MANAGEMENT</span>
+                </div>
+                <h2 class="section-title">Know Where Money Goes.<br>Know What's Coming Next.</h2>
+                <p class="section-desc">
+                    Catat arus kas pengeluaran, evaluasi pos belanja bulanan, proyeksikan beban di masa depan, dan bangun ketahanan dana darurat secara disiplin.
+                </p>
+                <div class="feature-pill-rack">
+                    <span class="feat-pill"><i class="ph-bold ph-wallet"></i> Cash Flow 12 Bulan</span>
+                    <span class="feat-pill"><i class="ph-bold ph-trend-up"></i> Forecast Engine</span>
+                    <span class="feat-pill"><i class="ph-bold ph-shield-check"></i> Dana Darurat</span>
+                </div>
+
+                <!-- Primary Action CTA -->
+                <button id="cta-btn-finance" class="btn-section-cta theme-finance" onclick="launchAppWithAuthCheck('finance', '', 'Financial Management')">
+                    <span>Buka Financial Management</span>
+                    <div class="cta-icon-pill"><i class="ph-bold ph-arrow-square-out"></i></div>
+                </button>
+            </div>
+
+            <!-- Center: Character Analyzing Financial Charts -->
+            <div class="col-center-visual">
+                <span class="handwritten-note">Lebih terencana, lebih tenang. ↗</span>
+                <div class="illustration-card">
+                    <img src="/static/images/finance_character.jpg" alt="Financial Planning Workspace" loading="lazy">
+                </div>
+            </div>
+
+            <!-- Right: Monthly Expenses & Interactive Forecast Tabs -->
+            <div class="col-right-display">
+                <div class="finance-display-card">
+                    <h6>Monthly Expenses Breakdown</h6>
+                    <div class="expense-row-item">
+                        <span class="expense-name-tag"><i class="ph-bold ph-fork-knife" style="color:#F59E0B;"></i> Konsumsi & Makanan</span>
+                        <span class="expense-val">Rp 2.100.000</span>
+                    </div>
+                    <div class="expense-row-item">
+                        <span class="expense-name-tag"><i class="ph-bold ph-car" style="color:#38BDF8;"></i> Transportasi</span>
+                        <span class="expense-val">Rp 850.000</span>
+                    </div>
+                    <div class="expense-row-item">
+                        <span class="expense-name-tag"><i class="ph-bold ph-lightning" style="color:#6366F1;"></i> Tagihan & Utilitas</span>
+                        <span class="expense-val">Rp 1.250.000</span>
+                    </div>
+                    <div class="expense-row-item">
+                        <span class="expense-name-tag"><i class="ph-bold ph-credit-card" style="color:#EF4444;"></i> Cicilan & Fixed Cost</span>
+                        <span class="expense-val">Rp 2.400.000</span>
+                    </div>
+                </div>
+
+                <div class="finance-display-card">
+                    <h6>Forecast & Horizon Plan</h6>
+                    <div class="forecast-tab-buttons">
+                        <button class="forecast-tab-btn active" onclick="switchForecastHorizon('now', this)">Now</button>
+                        <button class="forecast-tab-btn" onclick="switchForecastHorizon('next_month', this)">Next Month</button>
+                        <button class="forecast-tab-btn" onclick="switchForecastHorizon('three_months', this)">3 Months</button>
+                        <button class="forecast-tab-btn" onclick="switchForecastHorizon('six_months', this)">6 Months</button>
+                    </div>
+
+                    <div class="forecast-bars-grid" id="forecast-bars-container">
+                        <div class="forecast-bar-item"><div class="forecast-bar-fill-track"><div class="forecast-bar-fill" style="height:65%;"></div></div><span class="forecast-bar-label">Jan</span></div>
+                        <div class="forecast-bar-item"><div class="forecast-bar-fill-track"><div class="forecast-bar-fill" style="height:70%;"></div></div><span class="forecast-bar-label">Feb</span></div>
+                        <div class="forecast-bar-item"><div class="forecast-bar-fill-track"><div class="forecast-bar-fill" style="height:75%;"></div></div><span class="forecast-bar-label">Mar</span></div>
+                        <div class="forecast-bar-item"><div class="forecast-bar-fill-track"><div class="forecast-bar-fill" style="height:60%;"></div></div><span class="forecast-bar-label">Apr</span></div>
+                        <div class="forecast-bar-item"><div class="forecast-bar-fill-track"><div class="forecast-bar-fill" style="height:80%;"></div></div><span class="forecast-bar-label">Mei</span></div>
+                        <div class="forecast-bar-item"><div class="forecast-bar-fill-track"><div class="forecast-bar-fill" style="height:85%;"></div></div><span class="forecast-bar-label">Jun</span></div>
+                        <div class="forecast-bar-item"><div class="forecast-bar-fill-track"><div class="forecast-bar-fill" style="height:95%;"></div></div><span class="forecast-bar-label">Sep</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================================
+         SECTION 04: ASSET TRACKER
+         ========================================================================= -->
+    <section id="section-asset" class="ecosystem-section light-theme-alt">
+        <div class="section-3col-grid">
+            <!-- Left: Info & Description & CTA -->
+            <div class="col-left-info">
+                <div class="section-badge-header">
+                    <span class="sec-number" style="color: #D97706;">04</span>
+                    <span class="sec-brand-tag" style="color: #D97706;"><i class="ph-bold ph-chart-donut"></i> ASSET TRACKER</span>
+                </div>
+                <h2 class="section-title">See How Your Assets Move.</h2>
+                <p class="section-desc">
+                    Pantau pergerakan kekayaan bersih, diversifikasi instrumen portofolio, dan evaluasi pencapaian roadmap finansial jangka panjang secara transparan.
+                </p>
+                <div class="feature-pill-rack">
+                    <span class="feat-pill"><i class="ph-bold ph-coins"></i> Valuasi Multi-Aset</span>
+                    <span class="feat-pill"><i class="ph-bold ph-compass"></i> Roadmap 2030</span>
+                    <span class="feat-pill"><i class="ph-bold ph-chart-pie"></i> Alokasi Portofolio</span>
+                </div>
+
+                <!-- Primary Action CTA -->
+                <button id="cta-btn-asset" class="btn-section-cta theme-asset" onclick="launchAppWithAuthCheck('asset-tracker', '', 'Asset Tracker Analytics')">
+                    <span>Buka Asset Tracker Analytics</span>
+                    <div class="cta-icon-pill"><i class="ph-bold ph-arrow-square-out"></i></div>
+                </button>
+            </div>
+
+            <!-- Center: Interactive Donut Chart & Allocation -->
+            <div class="col-center-visual">
+                <div class="asset-donut-card">
+                    <div class="donut-svg-stage">
+                        <svg viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#38BDF8" stroke-width="12" stroke-dasharray="100.2 238.7" stroke-dashoffset="0" onmouseover="highlightAssetSegment('properti')" onmouseout="resetAssetSegment()"/>
+                            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#6366F1" stroke-width="12" stroke-dasharray="66.8 238.7" stroke-dashoffset="-100.2" onmouseover="highlightAssetSegment('saham')" onmouseout="resetAssetSegment()"/>
+                            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#F59E0B" stroke-width="12" stroke-dasharray="43 238.7" stroke-dashoffset="-167" onmouseover="highlightAssetSegment('emas')" onmouseout="resetAssetSegment()"/>
+                            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#10B981" stroke-width="12" stroke-dasharray="28.7 238.7" stroke-dashoffset="-210" onmouseover="highlightAssetSegment('kas')" onmouseout="resetAssetSegment()"/>
+                        </svg>
+                        <div class="donut-center-info">
+                            <span id="donut-center-title">Total Assets</span>
+                            <h5 id="donut-center-val">Rp 385M</h5>
+                        </div>
+                    </div>
+
+                    <div class="asset-legend-grid">
+                        <div class="legend-item" onmouseover="highlightAssetSegment('properti')" onmouseout="resetAssetSegment()"><span class="legend-color-dot" style="background:#38BDF8;"></span> Properti <span>42%</span></div>
+                        <div class="legend-item" onmouseover="highlightAssetSegment('saham')" onmouseout="resetAssetSegment()"><span class="legend-color-dot" style="background:#6366F1;"></span> Saham <span>28%</span></div>
+                        <div class="legend-item" onmouseover="highlightAssetSegment('emas')" onmouseout="resetAssetSegment()"><span class="legend-color-dot" style="background:#F59E0B;"></span> Emas <span>18%</span></div>
+                        <div class="legend-item" onmouseover="highlightAssetSegment('kas')" onmouseout="resetAssetSegment()"><span class="legend-color-dot" style="background:#10B981;"></span> Kas <span>12%</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Asset Movement Timeline & Character Illustration -->
+            <div class="col-right-display">
+                <div class="roadmap-timeline-box">
+                    <h6>Asset Movement Roadmap</h6>
+                    <div class="roadmap-steps-row">
+                        <div class="roadmap-node-step active">
+                            <div class="rm-node-bullet"><i class="ph-bold ph-check"></i></div>
+                            <span class="rm-node-year">2026</span>
+                            <span class="rm-node-name">Cash</span>
+                        </div>
+                        <div class="roadmap-node-step active">
+                            <div class="rm-node-bullet"><i class="ph-bold ph-check"></i></div>
+                            <span class="rm-node-year">2027</span>
+                            <span class="rm-node-name">Invest</span>
+                        </div>
+                        <div class="roadmap-node-step">
+                            <div class="rm-node-bullet">3</div>
+                            <span class="rm-node-year">2028</span>
+                            <span class="rm-node-name">Vehicle</span>
+                        </div>
+                        <div class="roadmap-node-step">
+                            <div class="rm-node-bullet">4</div>
+                            <span class="rm-node-year">2029</span>
+                            <span class="rm-node-name">Business</span>
+                        </div>
+                        <div class="roadmap-node-step">
+                            <div class="rm-node-bullet">5</div>
+                            <span class="rm-node-year">2030</span>
+                            <span class="rm-node-name">Asset</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-center-visual">
+                    <span class="handwritten-note">Aset bertumbuh, masa depan lebih kuat. ↗</span>
+                    <div class="illustration-card" style="max-height: 220px;">
+                        <img src="/static/images/asset_character.jpg" alt="Journey to Financial Independence" loading="lazy">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================================
+         SECTION 05: EVERYTHING CONNECTED — ANIMATED COMMAND ARCHITECTURE
+         (NO CHARACTER IMAGE AS REQUESTED - FOCUSED ON DYNAMIC FLOW & LIVE STATS)
+         ========================================================================= -->
+    <section id="section-ecosystem" class="ecosystem-final-section">
+        <div class="final-grid-layout-2col">
+            <!-- Left: Headline & Core Actions -->
+            <div class="final-left-info">
+                <span class="hero-tag" style="color:#818CF8;">THE COMPLETE ECOSYSTEM</span>
+                <h2 class="final-headline">Everything Connected.<br>One Intelligence Layer.</h2>
+                <p class="final-desc">
+                    Bisnis apparel, arus kas keuangan, instrumen aset, dan pemantauan harian terhubung harmonis dalam satu ekosistem terpadu dengan sinkronisasi multi-database Supabase PostgreSQL.
+                </p>
+            </div>
+
+            <!-- Right: High-Tech Animated Interconnected Architecture Master Hub -->
+            <div class="architecture-master-panel">
+                <!-- Top Inflow Nodes -->
+                <div style="display:flex;gap:14px;width:100%;justify-content:center;flex-wrap:wrap;">
+                    <div class="arch-node-chip-interactive nexat" onclick="launchAppWithAuthCheck('nexat', '', 'NEXAT Apparel')">
+                        <i class="ph-bold ph-t-shirt" style="font-size:18px;color:#38BDF8;"></i>
+                        <div>
+                            <div>NEXAT Apparel</div>
+                            <span style="font-size:0.68rem;color:#94A3B8;font-weight:500;">Port 8002 • Orders & Vendor</span>
+                        </div>
+                    </div>
+                    <div class="arch-node-chip-interactive finance" onclick="launchAppWithAuthCheck('finance', '', 'Financial Management')">
+                        <i class="ph-bold ph-currency-circle-dollar" style="font-size:18px;color:#10B981;"></i>
+                        <div>
+                            <div>Financial Management</div>
+                            <span style="font-size:0.68rem;color:#94A3B8;font-weight:500;">Port 8003 • Cash Flow & Forecast</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Animated Directional Data Stream Pipes -->
+                <div class="arch-live-stream-pipe">
+                    <span class="stream-pulse-arrow"><i class="ph-bold ph-arrow-down"></i> Arus Data Order</span>
+                    <span class="stream-pulse-arrow"><i class="ph-bold ph-arrow-down"></i> Sync Arus Kas</span>
+                </div>
+
+                <!-- Central Pulsating ASPIRAN AI Engine Core -->
+                <div style="position:relative;display:flex;align-items:center;justify-content:center;">
+                    <div class="sonar-ripple"></div>
+                    <div class="sonar-ripple delayed"></div>
+                    <div class="arch-center-core-pulsar" onclick="launchAppWithAuthCheck('aspiran', '', 'ASPIRAN! AI')">
+                        <i class="ph-bold ph-robot"></i>
+                        <span>ASPIRAN! AI</span>
+                    </div>
+                </div>
+
+                <div class="arch-live-stream-pipe">
+                    <span class="stream-pulse-arrow"><i class="ph-bold ph-arrow-down"></i> Sinkronisasi Portofolio & Valuasi Aset Riil</span>
+                </div>
+
+                <!-- Bottom Asset Analytics Node -->
+                <div style="display:flex;justify-content:center;width:100%;">
+                    <div class="arch-node-chip-interactive asset" onclick="launchAppWithAuthCheck('asset-tracker', '', 'Asset Tracker')">
+                        <i class="ph-bold ph-chart-donut" style="font-size:18px;color:#F59E0B;"></i>
+                        <div>
+                            <div>Asset Tracker Analytics</div>
+                            <span style="font-size:0.68rem;color:#94A3B8;font-weight:500;">Streamlit Cloud • Valuasi Multi-Aset & Roadmap 2030</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live System Terminal Stream -->
+                <div class="arch-live-console-feed">
+                    <div class="console-line">
+                        <span class="console-dot"></span>
+                        <span style="color:#38BDF8;">[GATEWAY]</span>
+                        <span>Multi-Database Pooler Active (AWS Supabase 6543)</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="console-dot"></span>
+                        <span style="color:#818CF8;">[INTELLIGENCE]</span>
+                        <span>ASPIRAN! AI Daemon Ready • Telegram Bot Webhook Active</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================================
+         APP HUB DRAWER (SLIDE-OVER)
+         ========================================================================= -->
+    <div id="app-hub-drawer" class="app-hub-drawer">
+        <div class="drawer-header">
+            <div class="drawer-title-group">
+                <h4>System Directory & Hub</h4>
+                <p>Direktori aplikasi terhubung ekosistem</p>
+            </div>
+            <button class="drawer-close-btn" onclick="closeAppHub()">&times;</button>
+        </div>
+
+        <div class="drawer-body">
+            <!-- Quick Live Stats with RBAC Visibility -->
+            <div class="drawer-stats-summary">
+                <div class="d-stat-card">
+                    <span>Total Net Worth</span>
+                    <h5 id="drawer-stat-total-asset">Rp 385.000.000</h5>
+                </div>
+                <div class="d-stat-card">
+                    <span>Tabungan Likuid</span>
+                    <h5 id="drawer-stat-tabungan">Rp 45.000.000</h5>
+                </div>
+                <div class="d-stat-card">
+                    <span>Portofolio Investasi</span>
+                    <h5 id="drawer-stat-investasi">Rp 215.000.000</h5>
+                </div>
+                <div class="d-stat-card">
+                    <span>Hutang Vendor (NEXAT)</span>
+                    <h5 id="drawer-stat-hutang">Rp 18.500.000</h5>
+                </div>
+            </div>
+
+            <!-- App Cards Container -->
+            <div class="apps-grid-cards" id="apps-grid">
+                <!-- Loaded dynamically with RBAC state by app.js -->
+            </div>
+        </div>
+    </div>
+    <div class="drawer-backdrop" onclick="closeAppHub()"></div>
+
+    <!-- =========================================================================
+         MODALS: LOGIN & REGISTRATION / USER PROFILE & SETTINGS
+         ========================================================================= -->
+    <!-- Modal 1: Auth Modal (Login & Register Tabs) -->
+    <div id="login-modal" class="modal-backdrop hidden" onclick="closeModalOnBackdrop(event)">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <i class="ph-bold ph-shield-check text-primary" style="font-size: 22px; color: #38BDF8;"></i>
+                    <h4 id="auth-modal-title">Akses Ekosistem</h4>
+                </div>
+                <button class="btn-close" onclick="closeLoginModal()">&times;</button>
+            </div>
+
+            <!-- Tab Switcher: Masuk vs Daftar -->
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab-btn active" id="tab-btn-login" onclick="switchAuthTab('login')">
+                    <i class="ph-bold ph-sign-in"></i> Masuk
+                </button>
+                <button type="button" class="auth-tab-btn" id="tab-btn-register" onclick="switchAuthTab('register')">
+                    <i class="ph-bold ph-user-plus"></i> Daftar Akun
+                </button>
+            </div>
+
+            <!-- Form 1: Login -->
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <div class="input-with-icon">
+                        <i class="ph-bold ph-user"></i>
+                        <input type="text" id="username" placeholder="Masukkan username Anda" required autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <div class="input-with-icon">
+                        <i class="ph-bold ph-lock"></i>
+                        <input type="password" id="password" placeholder="Masukkan password" required autocomplete="current-password">
+                        <button type="button" class="btn-pwd-eye" onclick="togglePasswordVisibility('password', this)" title="Lihat Password">
+                            <i class="ph-bold ph-eye"></i>
                         </button>
                     </div>
                 </div>
 
-                <div class="form-options">
-                    <label class="remember-me">
-                        <input type="checkbox" id="remember-me" checked>
-                        <span>Ingat sesi saya di perangkat ini</span>
-                    </label>
-                </div>
-
-                <button type="submit" id="btn-login" class="btn-primary">
-                    <span class="btn-text">Masuk ke Portal</span>
+                <button type="submit" id="btn-login" class="btn-modal-primary">
+                    <span>Masuk ke Sistem</span>
                     <i class="ph-bold ph-arrow-right"></i>
                 </button>
+
+                <div class="auth-switch-prompt">
+                    Belum punya akun? <a href="javascript:void(0)" onclick="switchAuthTab('register')">Daftar Akun Baru</a>
+                </div>
             </form>
 
-            <div class="login-footer">
-                <span>Ekosistem Terintegrasi Mas Aan &copy; 2026</span>
-            </div>
+            <!-- Form 2: Register -->
+            <form id="register-form" class="hidden" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label class="form-label" for="reg-fullname">Nama Lengkap</label>
+                    <div class="input-with-icon">
+                        <i class="ph-bold ph-identification-card"></i>
+                        <input type="text" id="reg-fullname" placeholder="Contoh: Budi Pratama" required autocomplete="name">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="reg-username">Username Baru</label>
+                    <div class="input-with-icon">
+                        <i class="ph-bold ph-user"></i>
+                        <input type="text" id="reg-username" placeholder="Huruf/angka tanpa spasi (min. 3 karakter)" required autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="reg-password">Password</label>
+                    <div class="input-with-icon">
+                        <i class="ph-bold ph-lock"></i>
+                        <input type="password" id="reg-password" placeholder="Minimal 6 karakter" required autocomplete="new-password">
+                        <button type="button" class="btn-pwd-eye" onclick="togglePasswordVisibility('reg-password', this)" title="Lihat Password">
+                            <i class="ph-bold ph-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="reg-confirm-password">Konfirmasi Password</label>
+                    <div class="input-with-icon">
+                        <i class="ph-bold ph-check-circle"></i>
+                        <input type="password" id="reg-confirm-password" placeholder="Ulangi password" required autocomplete="new-password">
+                    </div>
+                </div>
+
+                <button type="submit" id="btn-register" class="btn-modal-primary">
+                    <span>Daftar & Masuk Sekarang</span>
+                    <i class="ph-bold ph-user-plus"></i>
+                </button>
+
+                <div class="auth-switch-prompt">
+                    Sudah memiliki akun? <a href="javascript:void(0)" onclick="switchAuthTab('login')">Masuk di sini</a>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- VIEW 2: PORTAL DASHBOARD (SHOWN WHEN LOGGED IN) -->
-    <div id="portal-view" class="view-container hidden">
-        <!-- Top Navigation -->
-        <header class="navbar glass-panel">
-            <div class="nav-brand">
-                <div class="brand-badge small">
-                    <i class="ph-bold ph-shield-check"></i>
-                </div>
-                <div class="nav-title-group">
-                    <span class="nav-app-name">ONE GATE PORTAL</span>
-                    <span class="nav-org-tag">Mas Aan Executive Suite</span>
-                </div>
-            </div>
-
-            <div class="nav-actions">
-                <div class="user-pill glass-panel">
-                    <div class="user-avatar">
-                        <i class="ph-bold ph-user"></i>
-                    </div>
-                    <div class="user-info">
-                        <span id="user-display-name" class="user-name">Mas Aan</span>
-                        <span id="user-role-tag" class="user-role">Administrator</span>
-                    </div>
-                </div>
-
-                <button class="btn-icon" onclick="openPasswordModal()" title="Ubah Password">
-                    <i class="ph ph-gear"></i>
-                </button>
-                <button class="btn-icon btn-logout" onclick="handleLogout()" title="Keluar">
-                    <i class="ph ph-sign-out"></i>
-                </button>
-            </div>
-        </header>
-
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <!-- Welcome Header -->
-            <section class="welcome-section">
-                <div class="welcome-text">
-                    <div class="greeting-row">
-                        <h2 class="welcome-heading">Selamat Datang, <span id="welcome-user">Mas Aan</span> 👋</h2>
-                        <span class="status-live-badge"><span class="pulse-dot"></span> Seluruh Sistem Terhubung</span>
-                    </div>
-                    <p class="welcome-desc">Akses seluruh aplikasi keuangan, operasional vendor, dan bot asisten cerdas melalui satu gerbang autentikasi terpadu.</p>
-                </div>
-            </section>
-
-            <!-- Live Multi-App Summary Metrics -->
-            <section class="metrics-grid">
-                <div class="metric-card glass-panel">
-                    <div class="metric-header">
-                        <span class="metric-label">Total Kekayaan Bersih (Aset)</span>
-                        <div class="metric-icon-box blue">
-                            <i class="ph-bold ph-coins"></i>
-                        </div>
-                    </div>
-                    <div id="stat-total-asset" class="metric-value">Memuat...</div>
-                    <div class="metric-footnote">Akumulasi Saldo Tabungan & Portofolio Saham/Emas</div>
-                </div>
-
-                <div class="metric-card glass-panel">
-                    <div class="metric-header">
-                        <span class="metric-label">Kas & Tabungan Bank</span>
-                        <div class="metric-icon-box green">
-                            <i class="ph-bold ph-bank"></i>
-                        </div>
-                    </div>
-                    <div id="stat-tabungan" class="metric-value">Memuat...</div>
-                    <div class="metric-footnote">Saldo kas riil siap pakai di Bank Mandiri & BCA</div>
-                </div>
-
-                <div class="metric-card glass-panel">
-                    <div class="metric-header">
-                        <span class="metric-label">Investasi & Saham Aktif</span>
-                        <div class="metric-icon-box purple">
-                            <i class="ph-bold ph-chart-line-up"></i>
-                        </div>
-                    </div>
-                    <div id="stat-investasi" class="metric-value">Memuat...</div>
-                    <div class="metric-footnote">Portofolio Saham (BBRI, TPIA) & Emas Fisik</div>
-                </div>
-
-                <div class="metric-card glass-panel">
-                    <div class="metric-header">
-                        <span class="metric-label">Kewajiban Vendor Tertunda</span>
-                        <div class="metric-icon-box pink">
-                            <i class="ph-bold ph-receipt"></i>
-                        </div>
-                    </div>
-                    <div id="stat-hutang-vendor" class="metric-value">Memuat...</div>
-                    <div id="stat-vendor-orders" class="metric-footnote">0 pesanan vendor konveksi belum lunas</div>
-                </div>
-            </section>
-
-            <!-- App Launcher Directory -->
-            <section class="apps-section">
-                <div class="section-title-group">
-                    <h3 class="section-title">Aplikasi & Layanan Terintegrasi</h3>
-                    <p class="section-subtitle">Klik untuk langsung membuka aplikasi tanpa perlu login berulang kali.</p>
-                </div>
-
-                <div id="apps-grid" class="apps-grid">
-                    <!-- Cards will be populated by app.js -->
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- MODAL: CHANGE PASSWORD -->
-    <div id="password-modal" class="modal-backdrop hidden" onclick="closeModalOnBackdrop(event)">
-        <div class="modal-card glass-panel">
+    <!-- Modal 2: Dynamic User Profile & Settings Modal -->
+    <div id="profile-settings-modal" class="modal-backdrop hidden" onclick="closeModalOnBackdrop(event)">
+        <div class="modal-card profile-modal-card">
             <div class="modal-header">
                 <div class="modal-title-group">
-                    <i class="ph-bold ph-key"></i>
-                    <h4>Ubah Password Akun</h4>
+                    <i class="ph-bold ph-user-circle text-primary" style="font-size: 24px; color: #38BDF8;"></i>
+                    <h4>Profil & Pengaturan Akun</h4>
                 </div>
-                <button class="btn-close" onclick="closePasswordModal()">&times;</button>
+                <button class="btn-close" onclick="closeProfileSettingsModal()">&times;</button>
             </div>
-            <form id="change-password-form" onsubmit="handleChangePassword(event)">
-                <div class="input-group">
-                    <label for="old-password">Password Lama</label>
-                    <div class="input-wrapper">
-                        <i class="ph ph-lock-key"></i>
-                        <input type="password" id="old-password" required placeholder="Password saat ini">
+
+            <!-- Profile Summary Card -->
+            <div class="profile-info-box">
+                <div class="profile-user-row">
+                    <div class="profile-avatar-lg"><i class="ph-bold ph-user"></i></div>
+                    <div class="profile-user-texts">
+                        <h4 id="profile-fullname">Nama Lengkap</h4>
+                        <span id="profile-username">@username</span>
+                        <div style="display:flex;gap:6px;align-items:center;margin-top:4px;">
+                            <span class="user-status-tag"><i class="ph-bold ph-shield-check"></i> Ruang Data Terisolasi</span>
+                        </div>
                     </div>
                 </div>
-                <div class="input-group">
-                    <label for="new-password">Password Baru</label>
-                    <div class="input-wrapper">
-                        <i class="ph ph-lock-key"></i>
-                        <input type="password" id="new-password" required placeholder="Minimal 6 karakter">
+
+                <div class="profile-notice-box">
+                    <i class="ph-bold ph-lock-key" style="color: #38BDF8; font-size: 16px;"></i>
+                    <span>Semua data finansial, portofolio aset, dan catatan Anda tersimpan secara terisolasi & aman hanya untuk akun ini.</span>
+                </div>
+            </div>
+
+            <!-- Password Change Form for Active User -->
+            <form id="profile-pwd-form" onsubmit="handleChangePassword(event)">
+                <h5 class="form-section-title"><i class="ph-bold ph-key"></i> Ubah Password Akun</h5>
+
+                <div class="form-group">
+                    <label class="form-label" for="settings-old-password">Password Lama</label>
+                    <div class="input-with-icon">
+                        <i class="ph-bold ph-lock"></i>
+                        <input type="password" id="settings-old-password" placeholder="Password saat ini" required autocomplete="current-password">
                     </div>
                 </div>
-                <div class="input-group">
-                    <label for="confirm-password">Konfirmasi Password Baru</label>
-                    <div class="input-wrapper">
-                        <i class="ph ph-check"></i>
-                        <input type="password" id="confirm-password" required placeholder="Ulangi password baru">
+
+                <div class="form-group">
+                    <label class="form-label" for="settings-new-password">Password Baru</label>
+                    <div class="input-with-icon">
+                        <i class="ph-bold ph-key"></i>
+                        <input type="password" id="settings-new-password" placeholder="Password baru (min. 6 karakter)" required autocomplete="new-password">
                     </div>
                 </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="closePasswordModal()">Batal</button>
-                    <button type="submit" id="btn-save-pwd" class="btn-primary">Simpan Password</button>
+
+                <div class="form-group">
+                    <label class="form-label" for="settings-confirm-password">Konfirmasi Password Baru</label>
+                    <div class="input-with-icon">
+                        <i class="ph-bold ph-check-circle"></i>
+                        <input type="password" id="settings-confirm-password" placeholder="Ulangi password baru" required autocomplete="new-password">
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:10px;margin-top:14px;">
+                    <button type="button" class="btn-hero-ghost" style="flex:1;padding:11px;font-size:0.88rem;justify-content:center;" onclick="closeProfileSettingsModal()">Tutup</button>
+                    <button type="submit" id="btn-save-settings-pwd" class="btn-modal-primary" style="flex:1.5;margin-top:0;">Simpan Password Baru</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script src="/static/app.js"></script>
+    <!-- Modal 3: Superadmin Approval Modal (Aan Exclusive) -->
+    <div id="approval-modal" class="modal-backdrop hidden" onclick="closeModalOnBackdrop(event)">
+        <div class="modal-card approval-modal-card">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <i class="ph-bold ph-user-plus text-primary" style="font-size: 22px; color: #38BDF8;"></i>
+                    <h4>Persetujuan Registrasi Pengguna</h4>
+                    <span class="approval-header-badge" id="modal-pending-counter">0 Menunggu</span>
+                </div>
+                <button class="btn-close" onclick="closeApprovalModal()">&times;</button>
+            </div>
+            
+            <div class="approval-modal-body">
+                <p class="approval-subtitle">Sebagai Superadmin, Anda memiliki wewenang penuh untuk menyetujui atau menolak pendaftaran akun baru.</p>
+                
+                <div class="approval-list" id="approval-users-list">
+                    <!-- Rendered dynamically by app.js -->
+                </div>
+            </div>
+
+            <div class="modal-footer-row" style="margin-top: 16px; display: flex; justify-content: flex-end;">
+                <button type="button" class="btn-hero-ghost" style="padding: 8px 18px; font-size: 0.85rem;" onclick="closeApprovalModal()">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/app.js?v=2.2.2"></script>
 </body>
 </html>
