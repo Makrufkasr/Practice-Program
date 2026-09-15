@@ -1,86 +1,93 @@
-# 🚀 Project Showcase: Ecosystem Intelligence — One Gate Portal & Single Sign-On (SSO)
+# 🚀 Project Showcase: Ecosystem Intelligence & Multi-App Microservices
 
-![One Gate Portal UI Showcase](C:/Users/makruf/.gemini/antigravity/brain/1607e9c4-7f62-44c6-a42b-58342348892f/one_gate_portal_showcase_1789458388228.jpg)
-
-> **Tagline:** *Unified Microservice Gateway, Enterprise SSO Identity Provider & Executive Command Center for Business & Financial Ecosystem.*
-
----
-
-## 📌 Executive Summary
-
-**One Gate Portal** adalah platform pintu gerbang terpadu (*Unified Central Gateway*) dan penyedia identitas (*Identity Provider*) berbasis **Single Sign-On (SSO)** yang menghubungkan seluruh ekosistem aplikasi independen (NEXAT Fashion Vendor Tracker, Financial Management, Asset Tracker, dan ASPIRAN! AI Business Intelligence Assistant) ke dalam satu pintu masuk yang aman, terisolasi per-pengguna, dan *zero-downtime*.
-
-Proyek ini dirancang untuk menjawab tantangan fragmentasi data, login berulang kali di berbagai port microservices, serta kebutuhan kontrol akses berbasis hak istimewa (*Superadmin Approval Workflow*).
+> **Ecosystem Title:** *Ecosystem Intelligence — One Gate Portal, Single Sign-On (SSO) & Business Command Center*  
+> **Author & Superadmin:** **Aan**  
+> **Production Live URL:** [https://basecampmeera.cloud](https://basecampmeera.cloud) | [https://finance.basecampmeera.cloud](https://finance.basecampmeera.cloud)
 
 ---
 
-## 💡 Problem Statement & Solusi
+## 📌 1. One Gate Portal & Enterprise SSO Hub
 
-```
-┌───────────────────────────────────────────────┐
-│               TANTANGAN AWAL                  │
-├───────────────────────────────────────────────┤
-│ • Login terpisah di setiap subdomain/port     │
-│ • Risiko kebocoran data antar pengguna        │
-│ • Sulit memantau metrik bisnis & keuangan     │
-│ • Proses deployment manual & rawan downtime   │
-└───────────────────────┬───────────────────────┘
-                        │ SOLUSI DENGAN ONE GATE PORTAL
-                        ▼
-┌───────────────────────────────────────────────┐
-│            ONE GATE PORTAL HUB                │
-├───────────────────────────────────────────────┤
-│ 1. 🔑 SSO Terpusat (JWT RS256/HS256)          │
-│ 2. 🛡️ Strict Zero-Data Leakage Isolation      │
-│ 3. 🤖 Integrasi AI Assistant (Gemini Flash)   │
-│ 4. 🚀 1-Click Zero-Downtime Deployment        │
-└───────────────────────────────────────────────┘
-```
+Pintu gerbang terpusat (*Central Gateway*) dengan antarmuka futuristik cybernetic yang menghubungkan seluruh aplikasi bisnis, asisten AI, dan modul finansial.
+
+![One Gate Portal Command Center](C:/Users/makruf/.gemini/antigravity/brain/1607e9c4-7f62-44c6-a42b-58342348892f/live_one_gate_portal_hub.png)
+
+### 🌟 Fitur Unggulan Portal:
+- **Centralized SSO (JWT):** Otentikasi sekali masuk dengan auto-propagation token ke subdomain microservices (`?token=<jwt>`).
+- **Superadmin Role (Aan):** Dilengkapi badge status Superadmin dan antrean persetujuan registrasi akun pengguna baru (*Pending Approval Workflow*).
+- **Strict Data Isolation:** Isolasi data per-pengguna secara ketat (*Zero Data Leakage*) di seluruh lapisan skema database PostgreSQL.
 
 ---
 
-## 🌟 Fitur & Kapabilitas Unggulan
+## 📊 2. ArthaPlan — 12-Month Cashflow Projection & Financial Management
 
-### 1. 🔑 Centralized SSO & Seamless App Launcher
-- Autentikasi terpusat berbasis **JSON Web Token (JWT)** dengan auto-propagation token ke microservices anak (`?token=<jwt>`).
-- Sekali login di portal utama ([basecampmeera.cloud](https://basecampmeera.cloud)), pengguna dapat langsung membuka aplikasi ekosistem tanpa perlu login ulang.
+Engine perencanaan finansial forward-looking dengan visualisasi bar-chart & line-chart terintegrasi untuk memproyeksikan saldo kas kumulatif, biaya rutin, cicilan, dan kewajiban pengeluaran mendatang.
 
-### 2. 🛡️ Superadmin Approval & Strict Data Isolation
-- **Self-Registration with Pending Approval:** Pendaftaran akun baru otomatis masuk ke antrean persetujuan (*approval queue*).
-- **Executive Approval Panel:** Akses eksklusif bagi Superadmin (Aan) dengan *badge count* real-time untuk menyetujui (*approve*) atau menolak (*reject*) pendaftaran akun.
-- **Per-Username Data Isolation:** Setiap data (tabungan, portofolio, hutang, catatan vendor) diisolasi berdasarkan username dengan filter `LOWER(username)` di seluruh lapisan PostgreSQL schema.
+![ArthaPlan Financial Management Overview](C:/Users/makruf/.gemini/antigravity/brain/1607e9c4-7f62-44c6-a42b-58342348892f/live_financial_mgmt_overview.png)
 
-### 3. 🤖 ASPIRAN! AI Assistant & Interactive Simulator
-- Simulasi dialog cerdas bot Telegram berbasis AI yang mampu merangkum status operasional konveksi NEXAT, valuasi aset portofolio, screener saham (IHSG), dan proyeksi arus kas dalam format conversational.
-
-### 4. ⚡ 1-Click Automated VPS Deployment
-- Mekanisme deployment otomatis dari komputer pengembang lokal ke VPS Ubuntu via skrip PowerShell (`deploy.ps1` / `deploy.bat`).
-- Menjalankan *remote SCP synchronization*, *Docker multi-stage rebuild*, *Nginx reverse proxy reload*, dan *SSL verification* dalam waktu < 20 detik.
+### 🌟 Fitur Utama Finansial:
+- **Forward-Looking Cashflow (12-24 Bulan):** Simulasi penerimaan vs pengeluaran (biaya tetap, cicilan, dan hutang mendatang) secara granular per bulan.
+- **Rincian Bulanan Carousel:** Menampilkan kartu pergerakan kas bulanan (Bulan 1 s/d Bulan 12) dengan rincian accordion interaktif (Surplus/Defisit).
+- **Dark Mode & Light Mode:** Dukungan penuh pergantian tema dengan CSS custom properties responsif.
 
 ---
 
-## 🏗️ Arsitektur Sistem & Alur Data
+## 📦 3. Rekap Kekurangan Bayar Vendor (Supply Chain Payables)
+
+Modul tracking kewajiban pelunasan termin vendor konveksi pakaian (*NEXAT Apparel*) yang terhubung langsung secara real-time ke skema database `Vendor_tracker`.
+
+![Rekap Kekurangan Bayar Vendor](C:/Users/makruf/.gemini/antigravity/brain/1607e9c4-7f62-44c6-a42b-58342348892f/live_financial_mgmt_vendor.png)
+
+### 🌟 Highlight Kemampuan:
+- **Live Integration:** Membaca status order produksi, total biaya, pembayaran termin yang sudah masuk, dan sisa kekurangan bayar.
+- **Auto-Injection ke Arus Kas:** Kekurangan bayar vendor secara otomatis masuk ke daftar *Planned Expenses* pada modul proyeksi bulanan sesuai tanggal jatuh tempo.
+
+---
+
+## 💳 4. Pemantauan Kartu Kredit & Pembelian Cicilan
+
+Manajemen limit kredit, rasio utilisasi perbankan, dan penjadwalan amortisasi cicilan barang dengan informasi tenor dan step cicilan transparan.
+
+![Cicilan & Kartu Kredit](C:/Users/makruf/.gemini/antigravity/brain/1607e9c4-7f62-44c6-a42b-58342348892f/live_financial_mgmt_installments.png)
+
+### 🌟 Highlight Kemampuan:
+- **Credit Card Health:** Monitoring limit kartu kredit dan rasio pemakaian limit (*utilization rate*).
+- **Installment Amortization:** Menghitung alokasi potongan per bulan dan rincian tenor (contoh: *Kasur - Bulan ke-1 dari 12*).
+
+---
+
+## 📈 5. Portofolio Aset Pasar Modal & Rekening Kas Live
+
+Monitoring aset likuid (rekening bank) dan valuasi portofolio investasi pasar modal (saham IHSG & emas) terintegrasi skema `APP_ASSET_TRACKER`.
+
+![Saldo Tabungan & Portofolio Investasi](C:/Users/makruf/.gemini/antigravity/brain/1607e9c4-7f62-44c6-a42b-58342348892f/live_financial_mgmt_assets.png)
+
+### 🌟 Highlight Kemampuan:
+- **Live Net Worth Calculation:** Menghitung total nilai pasar, modal awal, serta *floating profit/loss* secara instan.
+- **Multi-Asset Allocation:** Rekapitulasi saham (BBCA, BBRI) dan komoditas fisik emas dalam satu ringkasan portofolio.
+
+---
+
+## 🏗️ Arsitektur Sistem & Ekosistem Teknologi
 
 ```mermaid
 flowchart TD
-    User([Pengguna / Browser]) -->|HTTPS / SSL| Nginx[Nginx Reverse Proxy]
+    Client([Pengguna Web / Mobile Browser]) -->|HTTPS / SSL Certbot| Nginx[Nginx Reverse Proxy 1.24]
     
-    subgraph Host_VPS [Server VPS - Ubuntu 24.04]
-        Nginx -->|Port 8000| Portal[One Gate Portal\nFastAPI Container]
-        Nginx -->|Port 8003| Finance[Financial Management\nFastAPI Container]
-        Nginx -->|Port 8002| Nexat[NEXAT Vendor Tracker\nFlask Container]
-        Nginx -->|Port 8501| AssetTracker[Asset Tracker\nStreamlit Container]
+    subgraph Host_VPS [Server VPS Ubuntu - 203.194.112.223]
+        Nginx -->|basecampmeera.cloud| Portal[One Gate Portal Hub\nFastAPI - Port 8000]
+        Nginx -->|finance.basecampmeera.cloud| Finance[ArthaPlan Finance Engine\nFastAPI - Port 8003]
+        Nginx -->|nexat.basecampmeera.cloud| Nexat[NEXAT Vendor Tracker\nFlask - Port 8002]
         
-        Portal -.->|SSO Token Launch| Finance
-        Portal -.->|SSO Token Launch| Nexat
-        Portal -.->|SSO Token Launch| AssetTracker
+        Portal -.->|SSO JWT Auth Launch| Finance
+        Portal -.->|SSO JWT Auth Launch| Nexat
     end
     
-    subgraph Cloud_Database [PostgreSQL Database - Supabase Cloud Pooler]
-        DB_Auth[(Schema: APP_AUTH\nUsers & Roles)]
-        DB_Fin[(Schema: APP_FINANCIAL_PLANNING\nIncomes, Expenses, CC)]
-        DB_Asset[(Schema: APP_ASSET_TRACKER\nTabungan & Portofolio)]
-        DB_Vendor[(Schema: Vendor_tracker\nOrders & Debts)]
+    subgraph Cloud_Storage [PostgreSQL Database - Supabase AWS Pooler]
+        DB_Auth[(APP_AUTH\nUsers, Roles, Password Hash)]
+        DB_Fin[(APP_FINANCIAL_PLANNING\nIncomes, Expenses, CC, Installments)]
+        DB_Asset[(APP_ASSET_TRACKER\nTabungan & Portofolio Saham)]
+        DB_Vendor[(Vendor_tracker\nOrders, Payments, Debts)]
     end
     
     Portal --> DB_Auth
@@ -93,40 +100,20 @@ flowchart TD
 
 ---
 
-## 🛠️ Tech Stack & Ekosistem Teknologi
+## 🛠️ Ringkasan Tech Stack
 
-| Kategori | Teknologi | Deskripsi Penggunaan |
-|---|---|---|
-| **Backend & API** | Python 3.11, FastAPI, Uvicorn | High-performance async REST API & SSO Token Authority |
-| **Frontend & UI** | Semantic HTML5, CSS3 Tokens, Vanilla JS (ES6+) | Modern Glassmorphism & Cybernetic Command Center UI (Non-AI Look) |
-| **Security & Auth** | PyJWT, PBKDF2-HMAC-SHA256 (Salted) | Enkripsi kredensial & otentikasi stateless lintas domain |
-| **Database & ORM** | PostgreSQL 15 (Supabase), SQLAlchemy 2.0 | Multi-schema architecture dengan koneksi pooler AWS |
-| **Container & Ops** | Docker, Docker Compose, Nginx, Certbot SSL | Containerized microservices dengan zero-downtime restart |
-| **Data Viz** | Chart.js 4.4, SVG Animated Wave & Pulse | Visualisasi metrik finansial, radar performa, dan arus kas |
-
----
-
-## 📊 Highlight Database & Multi-Schema Isolation
-
-Sistem membagi data menjadi 4 skema terisolasi di database PostgreSQL:
-1. **`APP_AUTH`**: Mengelola tabel `users` (status approval, role, password hash dengan salt, token generator).
-2. **`APP_FINANCIAL_PLANNING`**: Mengelola tabel `incomes`, `expenses`, `credit_cards`, `purchases`, `installments`, dan profil finansial forward-looking 12-24 bulan.
-3. **`APP_ASSET_TRACKER`**: Mengelola tabel saldo rekening kas live (`tabungan`) dan portofolio pasar modal (`portofolio_saham`).
-4. **`Vendor_tracker`**: Mengelola pesanan konveksi dan kewajiban jatuh tempo pembayaran vendor apparel.
+| Kategori | Teknologi |
+|---|---|
+| **Backend & Microservices** | Python 3.11, FastAPI, Uvicorn, SQLAlchemy 2.0, PyJWT |
+| **Frontend & Visualization** | Semantic HTML5, Modern CSS3 Tokens, Vanilla JavaScript (ES6+), Chart.js 4.4 |
+| **Database Architecture** | PostgreSQL 15 (Supabase Cloud Pooler), Multi-Schema Isolation |
+| **DevOps & Deployment** | Docker Multi-Stage, Docker Compose, Nginx, Certbot SSL, 1-Click Deployment Script (`deploy.ps1`) |
+| **Security & Cryptography** | PBKDF2-HMAC-SHA256 (Salted), Stateless JWT Cross-Subdomain Auth |
 
 ---
 
-## 📈 Key Impact & Hasil Implementasi
-
-- ⚡ **Zero Re-Authentication:** Mengurangi waktu login harian hingga **100%** antar microservices ekosistem.
-- 🔒 **Zero Data Bleed:** Pengguna hanya dapat membaca dan menulis data miliknya sendiri, diverifikasi pada level ORM query case-insensitive.
-- ⏱️ **Instant Deployment:** Waktu rilis kode dari lokal ke server live dipangkas dari **~15 menit (manual)** menjadi **< 25 detik (1-Click Deploy)**.
-- 📱 **Omni-device Support:** Antarmuka adaptif penuh dari layar smartphone (Mobile Dock Navigation) hingga monitor Ultra-Wide desktop.
-
----
-
-## 📂 Repositori & Akses Live
-- **Portal Live:** [https://basecampmeera.cloud](https://basecampmeera.cloud)
-- **Financial Sub-Engine Live:** [https://finance.basecampmeera.cloud](https://finance.basecampmeera.cloud)
-- **GitHub Repository (Practice Program):** `https://github.com/Makrufkasr/Practice-Program.git`
-- **GitHub Repository (Financial Management):** `https://github.com/Makrufkasr/financial_management.git`
+## 📈 Nilai Tambah & Business Impact
+1. ⚡ **Single Sign-On (SSO):** Mengurangi friksi operasional dengan eliminasi login berulang.
+2. 🔒 **Keamanan & Privasi:** Zero data leakage per-username dengan isolasi database yang teruji.
+3. ⏱️ **DevOps Efisien:** 1-Click Deployment otomatis mempercepat proses rilis kode ke server dalam hitungan detik.
+4. 💼 **Visibilitas Finansial & Operasional:** Integrasi live antara hutang vendor konveksi dan proyeksi arus kas pribadi.
