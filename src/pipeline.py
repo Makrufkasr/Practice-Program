@@ -174,8 +174,13 @@ def jalankan_pipeline():
 
     ALAMAT_DATABASE = os.getenv(
         "ALAMAT_DATABASE",
-        "postgresql://postgres.zaqxdmhofnbmusemwaxl:Makrufkausar26@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres"
+        "postgresql+psycopg2://postgres.zaqxdmhofnbmusemwaxl:Makrufkausar26@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres"
     )
+    if ALAMAT_DATABASE.startswith("postgres://"):
+        ALAMAT_DATABASE = ALAMAT_DATABASE.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif ALAMAT_DATABASE.startswith("postgresql://"):
+        ALAMAT_DATABASE = ALAMAT_DATABASE.replace("postgresql://", "postgresql+psycopg2://", 1)
+
     engine = create_engine(ALAMAT_DATABASE)
 
     # 6. Bersihkan data lama untuk aset yang akan diperbarui
